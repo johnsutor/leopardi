@@ -34,6 +34,7 @@ class Leopardi:
         SYSTEM = platform.system()
 
         if blender_directory is None:
+            # os.path.expanduser('~')
             if SYSTEM is "Windows":
                 pass
             elif SYSTEM is "Linux":
