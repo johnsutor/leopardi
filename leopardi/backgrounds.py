@@ -9,6 +9,7 @@ a directory containing background images.
 
 import os
 import random
+from typing import Callable
 from PIL import Image
 
 
@@ -24,6 +25,7 @@ class BackgroundLoader:
         self,
         background_directory: str = "/backgrounds",
         background_mode: str = "random",
+        sampling_fn: Callable = None,
     ):
 
         self._background_modes = ["random", "iterative"]
@@ -35,7 +37,8 @@ class BackgroundLoader:
         assert (
             self.background_mode in self._background_modes
         ), "You must use a built-in background loading method"
-        pass
+
+        self._sampling_fn = sampling_fn
 
     def __len__(self):
         return len(
@@ -47,7 +50,10 @@ class BackgroundLoader:
         )
 
     def __call__(self, n: int = None):
-        if self.background_mode is "random":
+        if self._sampling_fn is not None:
+            return self._sampling_fn(self._background_directory)
+
+        elif self.background_mode is "random":
             img = random.choice(
                 [
                     f

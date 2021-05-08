@@ -34,9 +34,10 @@ class BlenderCamera:
         theta_min: float = 0.0,
         theta_max: float = 2.0 * pi,
         radius=1.0,
+        **kwargs,
     ):
 
-        self._camera_modes = ["random", "iterative"]
+        self._camera_modes = ["random", "fibonacci", "icosphere"]
         self._camera_types = [".fbx", ".obj"]
 
         assert camera_mode in self._camera_modes, "You must use a built-in camera mode"
@@ -80,15 +81,29 @@ class BlenderCamera:
         assert radius > 0.0, "Radius must be greater than zero"
         self.radius = radius
 
-        self._predefined_points = []
+        # Determine predefined points
+        #
+        # TODO: Generate KWARGS documentation
+        #
+        if "fibonacci" in self.camera_mode:
+            self._predefined_points = self._generate_fibonacci(kwargs["num_points"])
+
+        #
+        # TODO: Generate KWARGS documentation
+        #
+        elif "icosphere" in self.camera_mode:
+            self._predefined_points = self._generate_icosphere(kwargs["subdivisions"])
 
     def __call__(self, n: int = None):
         if self.camera_mode is "random":
             phi = (self.phi_max - self.phi_min) * random.random() + self.phi_min
             theta = (self.theta_max - self.theta_min) * random.random() + self.theta_min
 
-        elif self.camera_mode is "fibonacci":
-            pass
+        elif "random" in self.camera_mode:
+            return random.choice(self._predefined_points)
+
+        elif "iterate" in self.camera_mode:
+            return self._predefined_points[n]
 
         return self.radius, theta, phi
 
@@ -104,95 +119,86 @@ class BlenderCamera:
 
         angles = [GOLDEN_ANGLE * i for i in range(n)]
 
-        z = [i/n for i in range(1 - n, n, 2)]
+        z = [i / n for i in range(1 - n, n, 2)]
 
-        radii = [sqrt(1 - p**2) for p in z]
+        radii = [sqrt(1 - p ** 2) for p in z]
 
-        x = [ r * cos(a) for r, a in zip(radii, angles)]
-        y = [ r * sin(a) for r, a in zip(radii, angles)]
+        x = [r * cos(a) for r, a in zip(radii, angles)]
+        y = [r * sin(a) for r, a in zip(radii, angles)]
 
-        verts = list(zip(x,y,z))
+        verts = list(zip(x, y, z))
         verts = map(self._cartesian_to_spherical, verts)
-        
+
         return list(verts)
 
-    def _generate_icosphere(self, subdivisions: int=0):
+    def _generate_icosphere(self, subdivisions: int = 0):
         """ Copied from: https://sinestesia.co/blog/tutorials/python-icospheres/ """
         if subdivisions > 4:
             import warnings
-            warnings.warn("Using a number of subdivisions greater than four may crash the program")
+
+            warnings.warn(
+                "Using a number of subdivisions greater than four may crash the program"
+            )
 
         middle_point_cache = {}
 
         PHI = (1 + sqrt(5)) / 2
 
         verts = [
-                vertex(-1,  PHI, 0),
-                vertex( 1,  PHI, 0),
-                vertex(-1, -PHI, 0),
-                vertex( 1, -PHI, 0),
-
-                vertex(0, -1, PHI),
-                vertex(0,  1, PHI),
-                vertex(0, -1, -PHI),
-                vertex(0,  1, -PHI),
-
-                vertex( PHI, 0, -1),
-                vertex( PHI, 0,  1),
-                vertex(-PHI, 0, -1),
-                vertex(-PHI, 0,  1),
-                ]
-
+            vertex(-1, PHI, 0),
+            vertex(1, PHI, 0),
+            vertex(-1, -PHI, 0),
+            vertex(1, -PHI, 0),
+            vertex(0, -1, PHI),
+            vertex(0, 1, PHI),
+            vertex(0, -1, -PHI),
+            vertex(0, 1, -PHI),
+            vertex(PHI, 0, -1),
+            vertex(PHI, 0, 1),
+            vertex(-PHI, 0, -1),
+            vertex(-PHI, 0, 1),
+        ]
 
         faces = [
-                # 5 faces around point 0
-                [0, 11, 5],
-                [0, 5, 1],
-                [0, 1, 7],
-                [0, 7, 10],
-                [0, 10, 11],
-
-                # Adjacent faces
-                [1, 5, 9],
-                [5, 11, 4],
-                [11, 10, 2],
-                [10, 7, 6],
-                [7, 1, 8],
-
-                # 5 faces around 3
-                [3, 9, 4],
-                [3, 4, 2],
-                [3, 2, 6],
-                [3, 6, 8],
-                [3, 8, 9],
-
-                # Adjacent faces
-                [4, 9, 5],
-                [2, 4, 11],
-                [6, 2, 10],
-                [8, 6, 7],
-                [9, 8, 1],
+            [0, 11, 5],
+            [0, 5, 1],
+            [0, 1, 7],
+            [0, 7, 10],
+            [0, 10, 11],
+            [1, 5, 9],
+            [5, 11, 4],
+            [11, 10, 2],
+            [10, 7, 6],
+            [7, 1, 8],
+            [3, 9, 4],
+            [3, 4, 2],
+            [3, 2, 6],
+            [3, 6, 8],
+            [3, 8, 9],
+            [4, 9, 5],
+            [2, 4, 11],
+            [6, 2, 10],
+            [8, 6, 7],
+            [9, 8, 1],
         ]
 
         def vertex(x, y, z):
-            length = sqrt(x**2 + y**2 + z**2)
+            length = sqrt(x ** 2 + y ** 2 + z ** 2)
 
-            return [i / length for i in (x,y,z)]
-
+            return [i / length for i in (x, y, z)]
 
         def middle_point(point_1, point_2):
             smaller_index = min(point_1, point_2)
             greater_index = max(point_1, point_2)
 
-            key = '{0}-{1}'.format(smaller_index, greater_index)
+            key = "{0}-{1}".format(smaller_index, greater_index)
 
             if key in middle_point_cache:
                 return middle_point_cache[key]
 
-            # If it's not in cache, then we can cut it
             vert_1 = verts[point_1]
             vert_2 = verts[point_2]
-            middle = [sum(i)/2 for i in zip(vert_1, vert_2)]
+            middle = [sum(i) / 2 for i in zip(vert_1, vert_2)]
 
             verts.append(vertex(*middle))
 
@@ -214,7 +220,7 @@ class BlenderCamera:
                 faces_subdiv.append([v1, v2, v3])
 
             faces = faces_subdiv
-        
+
         verts = map(self._cartesian_to_spherical, verts)
-        
+
         return list(verts)

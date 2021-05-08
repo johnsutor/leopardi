@@ -9,6 +9,7 @@ a directory containing model files.
 
 import os
 import random
+from typing import Callable
 
 
 class ModelLoader:
@@ -23,6 +24,7 @@ class ModelLoader:
         self,
         model_directory: str = "/models",
         model_mode: str = "random",
+        sampling_fn: Callable = None,
     ):
 
         self._model_modes = ["random", "iterative"]
@@ -34,7 +36,8 @@ class ModelLoader:
         assert (
             self.model_mode in self._model_modes
         ), "You must use a built-in model loading method"
-        pass
+
+        self._sampling_fn = sampling_fn
 
     def __len__(self):
         return len(
@@ -46,7 +49,10 @@ class ModelLoader:
         )
 
     def __call__(self, n: int = None):
-        if self.model_mode is "random":
+        if self._sampling_fn is not None:
+            return self._sampling_fn(self._model_directory)
+
+        elif self.model_mode is "random":
             model = random.choice(
                 [
                     f

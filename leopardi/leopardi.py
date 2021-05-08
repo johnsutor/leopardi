@@ -9,6 +9,8 @@ the functionality of the Leopardi codebase is derived
 
 import os
 import platform
+from typing import Generic
+from joblib import Parallel, delayed
 
 
 class Leopardi:
@@ -21,9 +23,13 @@ class Leopardi:
 
     def __init__(
         self,
+        camera: Generic,
+        background_loader: Generic,
+        model_loader: Generic,
         background_directory: str = "/backgrounds",
         model_directory: str = "/models",
         blender_directory: str = None,
+        num_workers: int = 1,
     ):
 
         self._work_directory = os.getcwd()
@@ -48,5 +54,26 @@ class Leopardi:
         else:
             self._blender_directory = blender_directory
 
-    def render(self, N):
-        pass
+        self._num_workers = num_workers
+
+        self.camera = camera
+        self.background_loader = background_loader
+        self.model_loader = model_loader
+
+    def render(self, n: int = 0):
+        camera_location = self.camera()
+        background = self.background_loader(n)
+        model = self.model_loader(n)
+
+        render = lambda n: os.system(
+            "blender -b --python "
+            + self._work_directory
+            + "/blender.py -- -wd "
+            + self._work_directory
+            + " - rc "
+            + str(n)
+        )
+
+        os.chdir(self._blender_directory)
+
+        Parallel(n_jobs=self._num_workers, temp_folder="/tmp")(delayed(render)(n))
