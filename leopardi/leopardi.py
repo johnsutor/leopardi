@@ -21,9 +21,9 @@ class Leopardi:
 
     def __init__(
         self,
-        background_directory="/backgrounds",
-        model_directory="/models",
-        blender_directory=None,
+        background_directory: str = "/backgrounds",
+        model_directory: str = "/models",
+        blender_directory: str = None,
     ):
 
         self._work_directory = os.getcwd()
