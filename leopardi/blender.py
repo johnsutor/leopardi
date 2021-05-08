@@ -74,6 +74,39 @@ bpy.ops.import_scene.fbx(
     + model
 )
 
+# Select all objects and scale to 2^3 cube centered
+# about the origin
+minx, miny, minz, maxx, maxy, maxz = (0.0 for _ in range(6))
+
+for obj in bpy.data.objects.keys():
+    for p in bpy.data.objects[obj].bound_box:
+        x, y, z = p
+
+        if x < minx:
+            minx = x
+        elif x > maxx:
+            maxx = x
+
+        if y < miny:
+            miny = y
+        elif y > maxy:
+            maxy = y
+
+        if z < minz:
+            minz = z
+        elif z > maxz:
+            maxz = z
+
+xdim = maxx - minx
+ydim = maxy - miny
+zdim = maxz - minz
+
+scale_factor = 2.0 / max((xdim, ydim, zdim))
+
+bpy.ops.object.select_all(action="SELECT")
+bpy.ops.transform.resize(value=(scale_factor, scale_factor, scale_factor))
+bpy.ops.object.select_all(action="DESELECT")
+
 # Convert the spherical coordinates to Cartesian coordinates
 x = args.radius * math.sin(args.phi) * math.cos(args.theta)
 y = args.radius * math.sin(args.phi) * math.sin(args.theta)
@@ -112,7 +145,6 @@ if args.shadow:
         location=(0, 0, min_z + bpy.context.scene.objects[model[:-4]].location[-1]),
     )
     plane = bpy.data.objects["Plane"]
-    # plane.scale = (1, 1, 1)
 
     plane_material = bpy.data.materials.new(name="PlaneMaterial")
     plane_material.use_nodes = True
