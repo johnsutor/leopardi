@@ -39,7 +39,11 @@ class BackgroundLoader:
 
     def __len__(self):
         return len(
-            [f for f in os.listdir(self._background_directory) if os.path.isfile(f)]
+            [
+                f
+                for f in os.listdir(self._background_directory)
+                if os.path.isfile(f) and f[:-4] in self._image_formats
+            ]
         )
 
     def __call__(self, n: int = None):
