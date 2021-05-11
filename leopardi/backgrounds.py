@@ -9,7 +9,7 @@ a directory containing background images.
 
 import os
 import random
-from typing import Callable
+from typing import Any, Callable, Optional
 from PIL import Image
 
 
@@ -23,16 +23,15 @@ class BackgroundLoader:
 
     def __init__(
         self,
-        background_directory: str = "/backgrounds",
+        background_directory: str = os.getcwd() + "/backgrounds/",
         background_mode: str = "random",
-        sampling_fn: Callable = None,
+        sampling_fn: Optional[Callable[[str], Any]] = None,
     ):
-
         self._background_modes = ["random", "iterative"]
-        self._image_formats = [".jpg", ".png", ".gif"]
+        self._image_formats = tuple(Image.registered_extensions().keys())
 
         self._background_directory = background_directory
-        self.background_mode = background_directory
+        self.background_mode = background_mode
 
         assert (
             self.background_mode in self._background_modes
@@ -40,13 +39,15 @@ class BackgroundLoader:
 
         self._sampling_fn = sampling_fn
 
+        assert self.__len__() > 0, "You must have at least one background image in the backgrounds directory"
+
     def __len__(self):
         return len(
             [
-                f
-                for f in os.listdir(self._background_directory)
-                if os.path.isfile(f) and f[:-4] in self._image_formats
-            ]
+                    f
+                    for f in os.listdir(self._background_directory)
+                    if os.path.isfile(self._background_directory + f) and f.endswith(self._image_formats)
+                ]
         )
 
     def __call__(self, n: int = None):
@@ -58,7 +59,7 @@ class BackgroundLoader:
                 [
                     f
                     for f in os.listdir(self._background_directory)
-                    if os.path.isfile(f) and f[:-4] in self._image_formats
+                    if os.path.isfile(self._background_directory + f) and f.endswith(self._image_formats)
                 ]
             )
 
@@ -72,4 +73,4 @@ class BackgroundLoader:
                 if os.path.isfile(f) and f[:-4] in self._image_formats
             ][n % self.__len__()]
 
-        return Image.open(self.background_mode + "/" + img)
+        return Image.open(self._background_directory + img)

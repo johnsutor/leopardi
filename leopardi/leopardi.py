@@ -7,6 +7,7 @@ the functionality of the Leopardi codebase is derived
 
 """
 
+import leopardi
 import os
 import platform
 from typing import Generic
@@ -23,18 +24,20 @@ class Leopardi:
 
     def __init__(
         self,
-        camera: Generic,
-        background_loader: Generic,
-        model_loader: Generic,
-        background_directory: str = "/backgrounds",
-        model_directory: str = "/models",
+        camera: leopardi.BlenderCamera,
+        background_loader: leopardi.BackgroundLoader,
+        model_loader: leopardi.ModelLoader,
+        background_directory: str = "./backgrounds",
+        model_directory: str = "./models",
         blender_directory: str = None,
-        num_workers: int = 1,
+        render_directory: str = "./renders",
+        num_jobs: int = 1,
     ):
 
         self._work_directory = os.getcwd()
-        self._model_directory = model_directory
-        self._background_directory = background_directory
+        self._model_directory = os.path.realpath(model_directory)
+        self._background_directory = os.path.realpath(background_directory)
+        self._render_directory = os.path.realpath(render_directory)
 
         # Find the Blender directory based on OS
         SYSTEM = platform.system()
@@ -54,26 +57,31 @@ class Leopardi:
         else:
             self._blender_directory = blender_directory
 
-        self._num_workers = num_workers
+        self._num_jobs = num_jobs
 
         self.camera = camera
         self.background_loader = background_loader
         self.model_loader = model_loader
 
     def render(self, n: int = 0):
-        camera_location = self.camera()
+        camera_settings = self.camera()
         background = self.background_loader(n)
         model = self.model_loader(n)
+        print(os.path.realpath(self._render_directory))
 
-        render = lambda n: os.system(
+        rf = lambda n: os.system(
             "blender -b --python "
             + self._work_directory
-            + "/blender.py -- -wd "
+            + "/leopardi/_blender.py -- -wd "
             + self._work_directory
             + " - rc "
             + str(n)
+            + camera_settings
+            + " -m "
+            + model
+            + " -rd " + self._render_directory
         )
 
         os.chdir(self._blender_directory)
 
-        Parallel(n_jobs=self._num_workers, temp_folder="/tmp")(delayed(render)(n))
+        Parallel(n_jobs=self._num_jobs, temp_folder="/tmp")(delayed(rf)(i) for i in range(n))

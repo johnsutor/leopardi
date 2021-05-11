@@ -22,10 +22,11 @@ class BlenderCamera:
 
     def __init__(
         self,
-        camera_mode: str = "random",
+        angle_mode: str = "random",
+        radius_mode: str = "fixed",
         camera_type: str = "random",
-        fov_x: float = 0.0,
-        fov_y: float = 0.0,
+        fov_x: float = 0.00640536,
+        fov_y: float = 0.00640536,
         lens: float = 50.0,
         sensor_height: float = 24.0,
         sensor_width: float = 36.0,
@@ -37,12 +38,14 @@ class BlenderCamera:
         **kwargs,
     ):
 
-        self._camera_modes = ["random", "fibonacci", "icosphere"]
+        self._angle_modes = ["random", "fibonacci", "icosphere"]
+        self._radius_modes = ["fixed", "uniform", "log_normal"]
         self._camera_types = [".fbx", ".obj"]
 
-        assert camera_mode in self._camera_modes, "You must use a built-in camera mode"
+        assert angle_mode in self._angle_modes, "You must use a built-in angle mode"
 
-        self.camera_mode = camera_mode
+        self.angle_mode = angle_mode
+        self.radius_mode = radius_mode
         self.camera_type = camera_type
 
         assert (
@@ -81,38 +84,85 @@ class BlenderCamera:
         assert radius > 0.0, "Radius must be greater than zero"
         self.radius = radius
 
-        # Determine predefined points
+        # Determine predefined angle points
         #
         # TODO: Generate KWARGS documentation
         #
-        if "fibonacci" in self.camera_mode:
+        if "fibonacci" in self.angle_mode:
             self._predefined_points = self._generate_fibonacci(kwargs["num_points"])
 
         #
         # TODO: Generate KWARGS documentation
         #
-        elif "icosphere" in self.camera_mode:
+        elif "icosphere" in self.angle_mode:
             self._predefined_points = self._generate_icosphere(kwargs["subdivisions"])
 
+        # Determine radii modes
+        if "log_normal" in radius_mode:
+            self._radius_mean, self._radius_std = (
+                kwargs["radius_mean"],
+                kwargs["radius_std"],
+            ) if kwargs["radius_mean"] and kwargs["radius_std"] else 0, 1
+
+        if "uniform" in radius_mode:
+            self._radius_min, self._radius_max = (
+                kwargs["radius_min"],
+                kwargs["radius_max"],
+            ) if kwargs["radius_min"] and kwargs["radius_max"] else 0.5, 1.5
+
     def __call__(self, n: int = None):
-        if self.camera_mode is "random":
+        # Handle the angle mode
+        if self.angle_mode is "random":
             phi = (self.phi_max - self.phi_min) * random.random() + self.phi_min
             theta = (self.theta_max - self.theta_min) * random.random() + self.theta_min
 
-        elif "random" in self.camera_mode:
-            return random.choice(self._predefined_points)
+        elif "random" in self.angle_mode:
+            theta, phi = random.choice(self._predefined_points)
 
-        elif "iterate" in self.camera_mode:
-            return self._predefined_points[n]
+        elif "iterate" in self.angle_mode:
+            theta, phi = self._predefined_points[n]
 
-        return self.radius, theta, phi
+        # Handle the radius mode
+        if self.radius_mode is "fixed":
+            radius = self.radius
+
+        elif self.radius_mode is "uniform":
+            radius = random.uniform(self._radius_min, self._radius_max)
+
+        elif self.radius_mode is "log_normal":
+            radius = random.lognormvariate(self._radius_mean, self._radius_std)
+
+        blender_string = self._self_to_blend(radius, theta, phi)
+
+        return blender_string
+
+    def _self_to_blend(self, radius, theta, phi):
+        """
+        Formats the string to be passed to Blender for rendering
+        """
+
+        return f" -r {radius} -tta {theta} -phi {phi} -fovx {self.fov_x} -fovy {self.fov_y} -le {self.lens} -sh {self.sensor_height} -sw {self.sensor_width} "
 
     def _cartesian_to_spherical(self, x, y, z):
-        radius = sqrt(x ** 2 + y ** 2 + z ** 2)
         theta = atan(y / x)
         phi = atan(sqrt(x ** 2 + y ** 2) / z)
 
-        return radius, theta, phi
+        return theta, phi
+
+    def _fix_angle(self, angle_list: list):
+        """
+        Check that the supplied angles are within the range specified
+        by the user
+        """
+
+        return [
+            angles
+            for angles in angle_list
+            if angles[0] >= self.theta_min
+            if angles[0] <= self.theta_max
+            if angles[1] >= self.phi_min
+            if angles[1] <= self.phi_max
+        ]
 
     def _generate_fibonacci(self, n: int = 1):
         GOLDEN_ANGLE = (3 - sqrt(5)) * pi
@@ -128,8 +178,9 @@ class BlenderCamera:
 
         verts = list(zip(x, y, z))
         verts = map(self._cartesian_to_spherical, verts)
+        verts = self._fix_angle(list(verts))
 
-        return list(verts)
+        return verts
 
     def _generate_icosphere(self, subdivisions: int = 0):
         """ Copied from: https://sinestesia.co/blog/tutorials/python-icospheres/ """
@@ -143,6 +194,11 @@ class BlenderCamera:
         middle_point_cache = {}
 
         PHI = (1 + sqrt(5)) / 2
+
+        def vertex(x, y, z):
+            length = sqrt(x ** 2 + y ** 2 + z ** 2)
+
+            return [i / length for i in (x, y, z)]
 
         verts = [
             vertex(-1, PHI, 0),
@@ -182,11 +238,6 @@ class BlenderCamera:
             [9, 8, 1],
         ]
 
-        def vertex(x, y, z):
-            length = sqrt(x ** 2 + y ** 2 + z ** 2)
-
-            return [i / length for i in (x, y, z)]
-
         def middle_point(point_1, point_2):
             smaller_index = min(point_1, point_2)
             greater_index = max(point_1, point_2)
@@ -222,5 +273,6 @@ class BlenderCamera:
             faces = faces_subdiv
 
         verts = map(self._cartesian_to_spherical, verts)
+        verts = self._fix_angle(list(verts))
 
-        return list(verts)
+        return verts
