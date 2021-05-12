@@ -12,8 +12,6 @@ import math
 import sys
 import argparse
 import bpy
-import bpy_extras
-from mathutils import Vector
 
 argv = sys.argv[sys.argv.index("--") + 1 :]
 parser = argparse.ArgumentParser(prog="renderer", description="Blender renderer")
@@ -132,7 +130,7 @@ bpy.context.scene.render.film_transparent = True
 
 
 # Labeling
-if args.labels is not None:
+if args.labels:
     if "YOLO" in args.labels:
         bound_low_x, bound_high_x, bound_low_y, bound_high_y = (
             float("inf"),

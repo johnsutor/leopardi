@@ -66,12 +66,13 @@ class Leopardi:
         self._render_directory = os.path.realpath(render_directory)
 
         # Create render config files as needed
-        if "YOLO" in self.renderer.labels:
-            with open(self._render_directory + "/classes.txt", "w") as f:
-                f.truncate(0)
-            for m in os.listdir(self.model_loader._model_directory):
-                with open(self._render_directory + "/classes.txt", "a") as f:
-                    f.write(str(m[:-4]) + "\n")
+        if self.renderer.labels:
+            if "YOLO" in self.renderer.labels:
+                with open(self._render_directory + "/classes.txt", "w") as f:
+                    f.truncate(0)
+                for m in os.listdir(self.model_loader._model_directory):
+                    with open(self._render_directory + "/classes.txt", "a") as f:
+                        f.write(str(m[:-4]) + "\n")
 
     def render(self, n: int = 0):
         os.chdir(self._blender_directory)

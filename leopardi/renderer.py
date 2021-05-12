@@ -58,7 +58,5 @@ class LeopardiRenderer:
         self.labels = labels
         self.render_engine = render_engine
 
-        print(map(lambda x: x + " ", labels))
-
     def __call__(self):
-        return f" -l {' '.join(self.labels)} -rx {self.resolution_x} -ry {self.resolution_y} -re {self.render_engine} {'-s' if self.use_shadow else ''} "
+        return f" -l {' '.join(self.labels) if self.labels else ''} -rx {self.resolution_x} -ry {self.resolution_y} -re {self.render_engine} {'-s' if self.use_shadow else ''} "
