@@ -1,0 +1,64 @@
+"""
+Author: John Sutor
+Date: May 8th, 2020
+
+This folder contains utilities and classes for loading in models from 
+a directory containing model files.
+
+"""
+
+from typing import Union
+
+
+class LeopardiRenderer:
+    """
+    The base class for defining rendering specs
+
+    Args:
+
+    """
+
+    def __init__(
+        self,
+        labels: Union[str, list] = None,
+        resolution_x: int = 1024,
+        resolution_y: int = 1024,
+        render_engine: str = "BLENDER_EEVEE",
+        use_shadow: bool = False,
+    ):
+        self.resolution_x = resolution_x
+        self.resolution_y = resolution_y
+        self.render_engine = render_engine
+        self.use_shadow = use_shadow
+        if type(labels) == str:
+            labels = labels.upper().strip()
+            assert labels in [
+                "YOLO",
+                "COCO",
+                "PASCAL",
+                "DEPTH",
+            ], f"{labels} is not a supported file format"
+        elif type(labels) == list:
+            labels = list(map(lambda x: x.upper().strip(), labels))
+            for label in labels:
+                assert label in [
+                    "YOLO",
+                    "COCO",
+                    "PASCAL",
+                    "DEPTH",
+                ], f"{label} is not a supported file format"
+
+        render_engine = render_engine.upper().strip()
+
+        assert render_engine in [
+            "BLENDER_EEVEE",
+            "CYCLES",
+        ], f"{render_engine} is not a supported render engine"
+
+        self.labels = labels
+        self.render_engine = render_engine
+
+        print(map(lambda x: x + " ", labels))
+
+    def __call__(self):
+        return f" -l {' '.join(self.labels)} -rx {self.resolution_x} -ry {self.resolution_y} -re {self.render_engine} {'-s' if self.use_shadow else ''} "

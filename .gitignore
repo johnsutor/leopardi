@@ -1,0 +1,6 @@
+__pycache__
+testing*
+*.ipynb
+models/
+backgrounds/
+renders*
