@@ -103,12 +103,12 @@ class LeopardiCamera:
                 self._radius_mean, self._radius_std = (
                     kwargs["radius_mean"],
                     kwargs["radius_std"],
-                ) 
+                )
             else:
                 self._radius_mean, self._radius_std = 0, 1
 
             if "radius_min" in kwargs:
-                self._radius_min =  max(0, kwargs["radius_min"])
+                self._radius_min = max(0, kwargs["radius_min"])
             else:
                 self._radius_min = 0
 
@@ -117,7 +117,7 @@ class LeopardiCamera:
                 self._radius_min, self._radius_max = (
                     max(0, kwargs["radius_min"]),
                     max(0, kwargs["radius_max"]),
-                ) 
+                )
             else:
                 self._radius_min, self._radius_max = 0.5, 1.5
 
@@ -141,7 +141,10 @@ class LeopardiCamera:
             radius = random.uniform(self._radius_min, self._radius_max)
 
         elif self.radius_mode is "log_normal":
-            radius = random.lognormvariate(self._radius_mean, self._radius_std) + self._radius_min
+            radius = (
+                random.lognormvariate(self._radius_mean, self._radius_std)
+                + self._radius_min
+            )
 
         blender_string = self._self_to_blend(radius, theta, phi)
 

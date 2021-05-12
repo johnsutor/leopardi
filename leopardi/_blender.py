@@ -134,7 +134,13 @@ bpy.context.scene.render.film_transparent = True
 # Labeling
 if args.labels is not None:
     if "YOLO" in args.labels:
-        bound_low_x, bound_high_x, bound_low_y, bound_high_y = float('inf'), -float('inf'), float('inf'), -float('inf')
+        bound_low_x, bound_high_x, bound_low_y, bound_high_y = (
+            float("inf"),
+            -float("inf"),
+            float("inf"),
+            -float("inf"),
+        )
+
         def clamp(x, minimum, maximum):
             return max(minimum, min(x, maximum))
 
@@ -166,7 +172,7 @@ if args.labels is not None:
 
             camera = cam_ob.data
             frame = [-v for v in camera.view_frame(scene=scene)[:3]]
-            camera_persp = camera.type != 'ORTHO'
+            camera_persp = camera.type != "ORTHO"
 
             lx = []
             ly = []
@@ -181,7 +187,7 @@ if args.labels is not None:
                         ly.append(0.5)
                     # Does it make any sense to drop these?
                     if z <= 0.0:
-                       continue
+                        continue
                     else:
                         frame = [(v / (v.z / z)) for v in frame]
 
@@ -204,18 +210,18 @@ if args.labels is not None:
                 print(min_x, max_x, min_y, max_y)
 
                 # Sanity check
-                return (
-                    min_x, max_x, min_y, max_y
-                )
-            
+                return (min_x, max_x, min_y, max_y)
+
             else:
                 mesh_eval.to_mesh_clear()
                 return bound_low_x, bound_high_x, bound_low_y, bound_high_y
 
         # Print the result
         for object in bpy.context.scene.objects:
-            if object.type == 'MESH':
-                min_x, max_x, min_y, max_y = camera_view_bounds_2d(bpy.context.scene, bpy.context.scene.camera, object)
+            if object.type == "MESH":
+                min_x, max_x, min_y, max_y = camera_view_bounds_2d(
+                    bpy.context.scene, bpy.context.scene.camera, object
+                )
                 if min_x < bound_low_x:
                     bound_low_x = min_x
                 if max_x > bound_high_x:
@@ -255,12 +261,11 @@ if args.labels is not None:
             + "/render_"
             + str(args.render_count).zfill(8)
             + ".txt",
-            "w"
+            "w",
         ) as f:
             f.write(
                 f"0 {str((bound_high_x - bound_low_x)/2 + bound_low_x)} {str(1 - ((bound_high_y - bound_low_y)/2 + bound_low_y))} {str(bound_high_x - bound_low_x)} {str(bound_high_y - bound_low_y)}"
             )
-
 
     if "COCO" in args.labels:
         raise NotImplementedError
