@@ -39,15 +39,18 @@ class BackgroundLoader:
 
         self._sampling_fn = sampling_fn
 
-        assert self.__len__() > 0, "You must have at least one background image in the backgrounds directory"
+        assert (
+            self.__len__() > 0
+        ), "You must have at least one background image in the backgrounds directory"
 
     def __len__(self):
         return len(
             [
-                    f
-                    for f in os.listdir(self._background_directory)
-                    if os.path.isfile(self._background_directory + f) and f.endswith(self._image_formats)
-                ]
+                f
+                for f in os.listdir(self._background_directory)
+                if os.path.isfile(self._background_directory + f)
+                and f.endswith(self._image_formats)
+            ]
         )
 
     def __call__(self, n: int = None):
@@ -59,7 +62,8 @@ class BackgroundLoader:
                 [
                     f
                     for f in os.listdir(self._background_directory)
-                    if os.path.isfile(self._background_directory + f) and f.endswith(self._image_formats)
+                    if os.path.isfile(self._background_directory + f)
+                    and f.endswith(self._image_formats)
                 ]
             )
 

@@ -1,6 +1,7 @@
 from .backgrounds import BackgroundLoader
-from .camera import BlenderCamera
+from .camera import LeopardiCamera
 from .models import ModelLoader
+from .renderer import LeopardiRenderer
 from .leopardi import Leopardi
 
 

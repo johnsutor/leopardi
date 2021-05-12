@@ -30,7 +30,7 @@ class ModelLoader:
         self._model_modes = ["random", "iterative"]
         self._model_formats = (".fbx", ".obj")
 
-        self._model_directory = model_directory
+        self._model_directory = os.path.realpath(model_directory) + "/"
         self.model_mode = model_mode
 
         assert (
@@ -39,14 +39,17 @@ class ModelLoader:
 
         self._sampling_fn = sampling_fn
 
-        assert self.__len__() > 0, "You must have at least one model in the models directory"
+        assert (
+            self.__len__() > 0
+        ), "You must have at least one model in the models directory"
 
     def __len__(self):
         return len(
             [
                 f
                 for f in os.listdir(self._model_directory)
-                if os.path.isfile(self._model_directory + f) and f.endswith(self._model_formats)
+                if os.path.isfile(self._model_directory + f)
+                and f.endswith(self._model_formats)
             ]
         )
 
@@ -57,10 +60,11 @@ class ModelLoader:
         elif self.model_mode is "random":
             model = random.choice(
                 [
-                f
-                for f in os.listdir(self._model_directory)
-                if os.path.isfile(self._model_directory + f) and f.endswith(self._model_formats)
-            ]
+                    f
+                    for f in os.listdir(self._model_directory)
+                    if os.path.isfile(self._model_directory + f)
+                    and f.endswith(self._model_formats)
+                ]
             )
 
         elif self.model_mode is "iterative":
@@ -70,7 +74,8 @@ class ModelLoader:
             model = [
                 f
                 for f in os.listdir(self._model_directory)
-                if os.path.isfile(self._model_directory + f) and f.endswith(self._model_formats)
+                if os.path.isfile(self._model_directory + f)
+                and f.endswith(self._model_formats)
             ][n % self.__len__()]
 
         return os.path.realpath(self._model_directory) + "/" + model

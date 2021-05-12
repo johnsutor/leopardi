@@ -12,7 +12,7 @@ import random
 from math import pi, sqrt, atan, sin, cos
 
 
-class BlenderCamera:
+class LeopardiCamera:
     """
     The base camera class for rendering within Blender
 
@@ -99,16 +99,27 @@ class BlenderCamera:
 
         # Determine radii modes
         if "log_normal" in radius_mode:
-            self._radius_mean, self._radius_std = (
-                kwargs["radius_mean"],
-                kwargs["radius_std"],
-            ) if kwargs["radius_mean"] and kwargs["radius_std"] else 0, 1
+            if "radius_mean" in kwargs and "radius_std" in kwargs:
+                self._radius_mean, self._radius_std = (
+                    kwargs["radius_mean"],
+                    kwargs["radius_std"],
+                ) 
+            else:
+                self._radius_mean, self._radius_std = 0, 1
+
+            if "radius_min" in kwargs:
+                self._radius_min =  max(0, kwargs["radius_min"])
+            else:
+                self._radius_min = 0
 
         if "uniform" in radius_mode:
-            self._radius_min, self._radius_max = (
-                kwargs["radius_min"],
-                kwargs["radius_max"],
-            ) if kwargs["radius_min"] and kwargs["radius_max"] else 0.5, 1.5
+            if "radius_min" in kwargs and "radius_max" in kwargs:
+                self._radius_min, self._radius_max = (
+                    max(0, kwargs["radius_min"]),
+                    max(0, kwargs["radius_max"]),
+                ) 
+            else:
+                self._radius_min, self._radius_max = 0.5, 1.5
 
     def __call__(self, n: int = None):
         # Handle the angle mode
@@ -130,7 +141,7 @@ class BlenderCamera:
             radius = random.uniform(self._radius_min, self._radius_max)
 
         elif self.radius_mode is "log_normal":
-            radius = random.lognormvariate(self._radius_mean, self._radius_std)
+            radius = random.lognormvariate(self._radius_mean, self._radius_std) + self._radius_min
 
         blender_string = self._self_to_blend(radius, theta, phi)
 

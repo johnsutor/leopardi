@@ -8,14 +8,12 @@ parser, and is able to efficiently and quickly produce renders
 based on the arguments specified.
 """
 
-import os
-import random
 import math
 import sys
 import argparse
 import bpy
 import bpy_extras
-from addon_utils import enable
+from mathutils import Vector
 
 argv = sys.argv[sys.argv.index("--") + 1 :]
 parser = argparse.ArgumentParser(prog="renderer", description="Blender renderer")
@@ -25,7 +23,7 @@ parser.add_argument(
     type=str,
     default=None,
     nargs="*",
-    choices=["YOLO", "COCO", "PASCAL", "DEPTH"],
+    choices=["YOLO", "COCO", "PASCAL", "DEPTH", "MASK"],
 )
 parser.add_argument("-m", dest="model", type=str, required=True)
 # parser.add_argument("-b", dest="background", type=str, required=True)
@@ -40,7 +38,8 @@ parser.add_argument(
     default="BLENDER_EEVEE",
     choices=["BLENDER_EEVEE", "CYCLES"],
 )
-parser.add_argument("-is", dest="image_size", type=int, default=1024)
+parser.add_argument("-rx", dest="resolution_x", type=int, default=1024)
+parser.add_argument("-ry", dest="resolution_y", type=int, default=1024)
 
 # Camera-related arguments
 parser.add_argument("-r", dest="radius", type=float, default=1.0)
@@ -59,8 +58,8 @@ print(args)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 
 # Set the render size
-bpy.context.scene.render.resolution_x = args.image_size
-bpy.context.scene.render.resolution_y = args.image_size
+bpy.context.scene.render.resolution_x = args.resolution_x
+bpy.context.scene.render.resolution_y = args.resolution_y
 
 bpy.ops.import_scene.fbx(filepath=args.model)
 
@@ -95,6 +94,7 @@ scale_factor = 2.0 / max((xdim, ydim, zdim))
 
 bpy.ops.object.select_all(action="SELECT")
 bpy.ops.transform.resize(value=(scale_factor, scale_factor, scale_factor))
+bpy.context.view_layer.update()
 bpy.ops.object.select_all(action="DESELECT")
 
 # Convert the spherical coordinates to Cartesian coordinates
@@ -134,7 +134,133 @@ bpy.context.scene.render.film_transparent = True
 # Labeling
 if args.labels is not None:
     if "YOLO" in args.labels:
-        raise NotImplementedError
+        bound_low_x, bound_high_x, bound_low_y, bound_high_y = float('inf'), -float('inf'), float('inf'), -float('inf')
+        def clamp(x, minimum, maximum):
+            return max(minimum, min(x, maximum))
+
+        def camera_view_bounds_2d(scene, cam_ob, me_ob):
+            """
+            Returns camera space bounding box of mesh object.
+
+            Negative 'z' value means the point is behind the camera.
+
+            Takes shift-x/y, lens angle and sensor size into account
+            as well as perspective/ortho projections.
+
+            :arg scene: Scene to use for frame size.
+            :type scene: :class:`bpy.types.Scene`
+            :arg obj: Camera object.
+            :type obj: :class:`bpy.types.Object`
+            :arg me: Untransformed Mesh.
+            :type me: :class:`bpy.types.Mesh´
+            :return: a Box object (call its to_tuple() method to get x, y, width and height)
+            :rtype: :class:`Box`
+            """
+
+            mat = cam_ob.matrix_world.normalized().inverted()
+            depsgraph = bpy.context.evaluated_depsgraph_get()
+            mesh_eval = me_ob.evaluated_get(depsgraph)
+            me = mesh_eval.to_mesh()
+            me.transform(me_ob.matrix_world)
+            me.transform(mat)
+
+            camera = cam_ob.data
+            frame = [-v for v in camera.view_frame(scene=scene)[:3]]
+            camera_persp = camera.type != 'ORTHO'
+
+            lx = []
+            ly = []
+
+            for v in me.vertices:
+                co_local = v.co
+                z = -co_local.z
+
+                if camera_persp:
+                    if z == 0.0:
+                        lx.append(0.5)
+                        ly.append(0.5)
+                    # Does it make any sense to drop these?
+                    if z <= 0.0:
+                       continue
+                    else:
+                        frame = [(v / (v.z / z)) for v in frame]
+
+                min_x, max_x = frame[1].x, frame[2].x
+                min_y, max_y = frame[0].y, frame[1].y
+
+                x = (co_local.x - min_x) / (max_x - min_x)
+                y = (co_local.y - min_y) / (max_y - min_y)
+
+                lx.append(x)
+                ly.append(y)
+
+            if len(lx) > 0 and len(ly) > 0:
+                min_x = clamp(min(lx), 0.0, 1.0)
+                max_x = clamp(max(lx), 0.0, 1.0)
+                min_y = clamp(min(ly), 0.0, 1.0)
+                max_y = clamp(max(ly), 0.0, 1.0)
+
+                mesh_eval.to_mesh_clear()
+                print(min_x, max_x, min_y, max_y)
+
+                # Sanity check
+                return (
+                    min_x, max_x, min_y, max_y
+                )
+            
+            else:
+                mesh_eval.to_mesh_clear()
+                return bound_low_x, bound_high_x, bound_low_y, bound_high_y
+
+        # Print the result
+        for object in bpy.context.scene.objects:
+            if object.type == 'MESH':
+                min_x, max_x, min_y, max_y = camera_view_bounds_2d(bpy.context.scene, bpy.context.scene.camera, object)
+                if min_x < bound_low_x:
+                    bound_low_x = min_x
+                if max_x > bound_high_x:
+                    bound_high_x = max_x
+                if min_y < bound_low_y:
+                    bound_low_y = min_y
+                if max_y > bound_high_y:
+                    bound_high_y = max_y
+        # xlist, ylist = [], []
+
+        # # Print all vertices
+        # for object in bpy.context.scene.objects:
+        #     if object.type == 'MESH':
+        #         for v in object.bound_box:
+        #             coord = object.matrix_world @ Vector(v)
+
+        #             # Get the location on the final rendered image
+        #             img_loc = bpy_extras.object_utils.world_to_camera_view(
+        #                 bpy.context.scene, camera_obj, coord
+        #             )
+
+        #             print(coord)
+        #             print(img_loc)
+
+        #             xlist.append(img_loc.x)
+        #             ylist.append(img_loc.y)
+
+        #         # Choose the bounding coordinates
+        #         low_x = 0.0 if min(xlist) < 0.0 else 1.0 if min(xlist) > 1.0 else min(xlist)
+        #         high_x = 0.0 if max(xlist) < 0.0 else 1.0 if max(xlist) > 1.0 else max(xlist)
+        #         low_y = 0.0 if min(ylist) < 0.0 else 1.0 if min(ylist) > 1.0 else min(ylist)
+        #         high_y = 0.0 if max(ylist) < 0.0 else 1.0 if max(ylist) > 1.0 else max(ylist)
+
+        # Output coordinates YOLO format
+        with open(
+            args.render_directory
+            + "/render_"
+            + str(args.render_count).zfill(8)
+            + ".txt",
+            "w"
+        ) as f:
+            f.write(
+                f"0 {str((bound_high_x - bound_low_x)/2 + bound_low_x)} {str(1 - ((bound_high_y - bound_low_y)/2 + bound_low_y))} {str(bound_high_x - bound_low_x)} {str(bound_high_y - bound_low_y)}"
+            )
+
 
     if "COCO" in args.labels:
         raise NotImplementedError
@@ -152,10 +278,7 @@ if args.labels is not None:
         node_tree.links.new(node_tree.nodes[1].outputs[1], node_tree.nodes[0].inputs[1])
 
         bpy.context.scene.render.filepath = (
-            args.render_directory
-            + "/depth_"
-            + str(args.render_count).zfill(8)
-            + ".jpg"
+            args.render_directory + "/depth_" + str(args.render_count).zfill(8) + ".jpg"
         )
 
         bpy.ops.render.render(write_still=True)
@@ -230,10 +353,7 @@ if args.shadow:
 
 bpy.context.scene.render.engine = args.render_engine
 bpy.context.scene.render.filepath = (
-    args.render_directory
-    + "/render_"
-    + str(args.render_count).zfill(8)
-    + ".jpg"
+    args.render_directory + "/render_" + str(args.render_count).zfill(8) + ".jpg"
 )
 
 bpy.ops.render.render(write_still=True)
