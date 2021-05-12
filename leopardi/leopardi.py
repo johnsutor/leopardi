@@ -11,6 +11,7 @@ import leopardi
 import os
 import platform
 from joblib import Parallel, delayed
+from PIL import Image
 
 
 class Leopardi:
@@ -78,6 +79,9 @@ class Leopardi:
             delayed(self._render_single)(i) for i in range(n)
         )
         os.chdir(self._work_directory)
+        Parallel(n_jobs=self._num_jobs, temp_folder="/tmp")(
+            delayed(self._apply_background)(i) for i in range(n)
+        )
 
     def _render_single(self, i):
         camera_settings = self.camera()
@@ -98,3 +102,15 @@ class Leopardi:
             + self._render_directory
             + render
         )
+
+    def _apply_background(self, i):
+        background = self.background_loader(i)
+
+        renders = [ f for f in os.listdir(self._render_directory) if "render_" in f if f.endswith(tuple(Image.registered_extensions().keys()))]
+        render = Image.open(self._render_directory + "/" + renders[i])
+        rw, rh = render.size
+
+        background = background.resize((rw, rh))
+
+        background.paste(render, (0, 0), mask=render)
+        background.save(self._render_directory+ "/" + renders[i])

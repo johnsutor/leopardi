@@ -207,16 +207,13 @@ if args.labels is not None:
                 max_y = clamp(max(ly), 0.0, 1.0)
 
                 mesh_eval.to_mesh_clear()
-                print(min_x, max_x, min_y, max_y)
 
-                # Sanity check
                 return (min_x, max_x, min_y, max_y)
 
             else:
                 mesh_eval.to_mesh_clear()
                 return bound_low_x, bound_high_x, bound_low_y, bound_high_y
 
-        # Print the result
         for object in bpy.context.scene.objects:
             if object.type == "MESH":
                 min_x, max_x, min_y, max_y = camera_view_bounds_2d(
