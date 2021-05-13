@@ -28,21 +28,71 @@ class Leopardi:
         background_loader: leopardi.BackgroundLoader,
         model_loader: leopardi.ModelLoader,
         renderer: leopardi.LeopardiRenderer,
-        blender_directory: str,
+        blender_directory: str = None,
         render_directory: str = "./renders",
         num_jobs: int = 1,
     ):
 
-        # Find the Blender directory based on OS
         SYSTEM = platform.system()
-
         if blender_directory is None:
-            # os.path.expanduser('~')
-            if SYSTEM is "Windows":
-                pass
-            elif SYSTEM is "Linux":
-                pass
-            elif SYSTEM is "Darwin":
+            if SYSTEM == "Windows":
+                if os.path.isdir("C:/Program Files/Blender Foundation/"):
+                    # Fetch most up-to-date
+                    try:
+                        dir = os.listdir("C:/Program Files/Blender Foundation/")
+                        dir.sort()
+                        dir = "C:/Program Files/Blender Foundation/" + dir[-1] + "/"
+                        self._blender_directory = (
+                            dir if "blender.exe" in os.listdir(dir) else None
+                        )
+                    except:
+                        pass
+
+                elif os.path.isdir(
+                    os.path.expanduser("~") + "/AppData/Roaming/Blender Foundation/"
+                ):
+                    # Fetch most up-to-date
+                    try:
+                        dir = os.listdir(
+                            os.path.expanduser("~")
+                            + "/AppData/Roaming/Blender Foundation/"
+                        )
+                        dir.sort()
+                        dir = (
+                            os.path.expanduser("~")
+                            + "/AppData/Roaming/Blender Foundation/"
+                            + dir[-1]
+                            + "/"
+                        )
+                        self._blender_directory = (
+                            dir if "blender.exe" in os.listdir(dir) else None
+                        )
+                    except:
+                        pass
+                else:
+                    raise Exception(
+                        "Unable to locate the Blender Install. Please provide Blender's location as an argument, or install Blender if you haven't done so already."
+                    )
+
+            elif SYSTEM == "Linux":
+                # /home/mlpc/blender
+                if os.path.isdir(os.path.expanduser("~") + "/blender/"):
+                    # Fetch most up-to-date
+                    try:
+                        dir = os.listdir(os.path.expanduser("~") + "/blender/")
+                        dir.sort()
+                        dir = os.path.expanduser("~") + "/blender/" + dir[-1] + "/"
+                        self._blender_directory = (
+                            dir if "blender.exe" in os.listdir(dir) else None
+                        )
+                    except:
+                        pass
+
+                else:
+                    raise Exception(
+                        "Unable to locate the Blender Install. Please provide Blender's location as an argument, or install Blender if you haven't done so already."
+                    )
+            elif SYSTEM == "Darwin":
                 pass
             else:
                 raise Exception(
@@ -107,11 +157,16 @@ class Leopardi:
     def _apply_background(self, i):
         background = self.background_loader(i)
 
-        renders = [ f for f in os.listdir(self._render_directory) if "render_" in f if f.endswith(tuple(Image.registered_extensions().keys()))]
-        render = Image.open(self._render_directory + "/" + renders[i])
+        renders = [
+            f
+            for f in os.listdir(self._render_directory)
+            if "render_" in f
+            if f.endswith(tuple(Image.registered_extensions().keys()))
+        ]
+        render = Image.open(self._render_directory + "/" + renders[i]).convert("RGBA")
         rw, rh = render.size
 
         background = background.resize((rw, rh))
 
         background.paste(render, (0, 0), mask=render)
-        background.save(self._render_directory+ "/" + renders[i])
+        background.save(self._render_directory + "/" + renders[i])

@@ -57,7 +57,7 @@ class ModelLoader:
         if self._sampling_fn is not None:
             return self._sampling_fn(self._model_directory)
 
-        elif self.model_mode is "random":
+        elif self.model_mode == "random":
             model = random.choice(
                 [
                     f
@@ -67,7 +67,7 @@ class ModelLoader:
                 ]
             )
 
-        elif self.model_mode is "iterative":
+        elif self.model_mode == "iterative":
             assert (
                 n is not None
             ), "You must provide the iteration to use iterative loading"

@@ -77,4 +77,4 @@ class BackgroundLoader:
                 if os.path.isfile(f) and f[:-4] in self._image_formats
             ][n % self.__len__()]
 
-        return Image.open(self._background_directory + img)
+        return Image.open(self._background_directory + img).convert("RGBA")

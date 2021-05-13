@@ -38,6 +38,7 @@ class LeopardiRenderer:
                 "PASCAL",
                 "DEPTH",
             ], f"{labels} is not a supported file format"
+            labels = [labels]
         elif type(labels) == list:
             labels = list(map(lambda x: x.upper().strip(), labels))
             for label in labels:
