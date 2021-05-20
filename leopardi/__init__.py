@@ -2,6 +2,7 @@ from .backgrounds import BackgroundLoader
 from .camera import LeopardiCamera
 from .models import ModelLoader
 from .renderer import LeopardiRenderer
+from .lighting import LeopardiLighting
 from .leopardi import Leopardi
 
 

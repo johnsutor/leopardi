@@ -26,28 +26,29 @@ class LeopardiRenderer:
         render_engine: str = "BLENDER_EEVEE",
         use_shadow: bool = False,
     ):
+        self._label_modes = [
+            "YOLO",
+            "COCO",
+            "PASCAL",
+            "DEPTH",
+        ]
+
         self.resolution_x = resolution_x
         self.resolution_y = resolution_y
         self.render_engine = render_engine
         self.use_shadow = use_shadow
         if type(labels) == str:
             labels = labels.upper().strip()
-            assert labels in [
-                "YOLO",
-                "COCO",
-                "PASCAL",
-                "DEPTH",
-            ], f"{labels} is not a supported file format"
+            assert (
+                labels in self._label_modes
+            ), f"{labels} is not a supported file format"
             labels = [labels]
         elif type(labels) == list:
             labels = list(map(lambda x: x.upper().strip(), labels))
             for label in labels:
-                assert label in [
-                    "YOLO",
-                    "COCO",
-                    "PASCAL",
-                    "DEPTH",
-                ], f"{label} is not a supported file format"
+                assert (
+                    label in self._label_modes
+                ), f"{label} is not a supported file format"
 
         render_engine = render_engine.upper().strip()
 

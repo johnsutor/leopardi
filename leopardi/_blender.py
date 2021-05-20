@@ -12,6 +12,7 @@ import math
 import sys
 import argparse
 import bpy
+from mathutils import Vector
 
 argv = sys.argv[sys.argv.index("--") + 1 :]
 parser = argparse.ArgumentParser(prog="renderer", description="Blender renderer")
@@ -22,6 +23,14 @@ parser.add_argument(
     default=None,
     nargs="*",
     choices=["YOLO", "COCO", "PASCAL", "DEPTH", "MASK"],
+)
+parser.add_argument(
+    "-lt",
+    dest="lighting_type",
+    type=str,
+    required=True,
+    default="SUN",
+    choices=["SPOT", "SUN", "POINT", "AREA", "FLASHLIGHT"],
 )
 parser.add_argument("-m", dest="model", type=str, required=True)
 # parser.add_argument("-b", dest="background", type=str, required=True)
@@ -48,7 +57,9 @@ parser.add_argument("-fovy", dest="fov_y", type=float, default=0.00640536)
 parser.add_argument("-le", dest="lens", type=float, default=50.0)
 parser.add_argument("-sh", dest="sensor_height", type=float, default=24.0)
 parser.add_argument("-sw", dest="sensor_width", type=float, default=36.0)
-
+parser.add_argument("-px", dest="perturbation_x", type=float, default=0),
+parser.add_argument("-py", dest="perturbation_y", type=float, default=0),
+parser.add_argument("-pz", dest="perturbation_z", type=float, default=0),
 
 args = parser.parse_known_args(argv)[0]
 print(args)
@@ -96,9 +107,9 @@ bpy.context.view_layer.update()
 bpy.ops.object.select_all(action="DESELECT")
 
 # Convert the spherical coordinates to Cartesian coordinates
-x = args.radius * math.sin(args.phi) * math.cos(args.theta)
-y = args.radius * math.sin(args.phi) * math.sin(args.theta)
-z = args.radius * math.cos(args.phi)
+x = args.radius * math.sin(args.phi) * math.cos(args.theta) + args.perturbation_x
+y = args.radius * math.sin(args.phi) * math.sin(args.theta) + args.perturbation_y
+z = args.radius * math.cos(args.phi) + args.perturbation_z
 
 # Add a camera
 camera = bpy.data.cameras.new("Camera")
@@ -118,13 +129,68 @@ camera_obj.rotation_euler = (args.phi, 0.0, args.theta + math.pi / 2)
 bpy.context.scene.camera = camera_obj
 
 
-# Add the sun
-light = bpy.data.lights.new(name="Light", type="SUN")
-light.energy = 2
-light_obj = bpy.data.objects.new("Light", light)
-light_obj.location = (x, y, float("inf"))
-bpy.context.collection.objects.link(light_obj)
-bpy.context.view_layer.objects.active = light_obj
+# Add the lighting options
+if args.lighting_type == "SUN":
+    light = bpy.data.lights.new(name="Light", type="SUN")
+    light.energy = 2
+    light_obj = bpy.data.objects.new("Light", light)
+    light_obj.location = (x, y, float("inf"))
+    bpy.context.collection.objects.link(light_obj)
+    bpy.context.view_layer.objects.active = light_obj
+
+elif args.lighting_type == "SPOT":
+    light = bpy.data.lights.new(name="Light", type="SPOT")
+    light_obj = bpy.data.objects.new("Light", light)
+    light_obj.location = (x, y, z)
+
+    # Calculate direction to rotate the light 
+    rotation = Vector((x,y,z)).to_track_quat('Z', 'Y')
+    light_obj.rotation_euler =  rotation.to_euler() #(args.phi, 0.0, args.theta + math.pi / 2)
+
+    bpy.context.collection.objects.link(light_obj)
+    bpy.context.view_layer.objects.active = light_obj
+
+elif args.lighting_type == "POINT":
+    light = bpy.data.lights.new(name="Light", type="POINT")
+    light_obj = bpy.data.objects.new("Light", light)
+    light_obj.location = (x, y, z)
+    bpy.context.collection.objects.link(light_obj)
+    bpy.context.view_layer.objects.active = light_obj
+
+elif args.lighting_type == "AREA":
+    light = bpy.data.lights.new(name="Light", type="AREA")
+    light_obj = bpy.data.objects.new("Light", light)
+    light_obj.location = (x, y, z)
+
+    # Calculate direction to rotate the light 
+    rotation = Vector((x,y,z)).to_track_quat('Z', 'Y')
+    light_obj.rotation_euler =  rotation.to_euler()
+
+    bpy.context.collection.objects.link(light_obj)
+    bpy.context.view_layer.objects.active = light_obj
+
+elif args.lighting_type == "FLASHLIGHT":
+    light_out = bpy.data.lights.new(name="Light", type="SPOT")
+    light_in = bpy.data.lights.new(name="Light", type="SPOT")
+
+    light_out.spot_size = math.pi / 12
+    light_in.spot_size = math.pi / 24
+    light_in.energy = 10 * light_in.energy
+
+    # Calculate direction to rotate the light 
+    rotation = Vector((x,y,z)).to_track_quat('Z', 'Y')
+
+    light_obj_out = bpy.data.objects.new("Light", light_out)
+    light_obj_out.location = (x, y, z)
+    light_obj_out.rotation_euler = rotation.to_euler()
+    light_obj_in = bpy.data.objects.new("Light", light_in)
+    light_obj_in.location = (x, y, z)
+    light_obj_in.rotation_euler = rotation.to_euler()
+
+    bpy.context.collection.objects.link(light_obj_out)
+    bpy.context.view_layer.objects.active = light_obj_out
+    bpy.context.collection.objects.link(light_obj_in)
+    bpy.context.view_layer.objects.active = light_obj_in
 
 bpy.context.scene.render.film_transparent = True
 

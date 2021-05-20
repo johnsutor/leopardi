@@ -7,7 +7,6 @@ information
 
 """
 
-import os
 import random
 from math import pi, sqrt, atan, sin, cos
 
@@ -24,7 +23,7 @@ class LeopardiCamera:
         self,
         angle_mode: str = "random",
         radius_mode: str = "fixed",
-        camera_type: str = "random",
+        positional_perturbation: str = "fixed",
         fov_x: float = 0.00640536,
         fov_y: float = 0.00640536,
         lens: float = 50.0,
@@ -40,13 +39,17 @@ class LeopardiCamera:
 
         self._angle_modes = ["random", "fibonacci", "icosphere"]
         self._radius_modes = ["fixed", "uniform", "log_normal"]
-        self._camera_types = [".fbx", ".obj"]
+        self._perturbations = ["fixed", "normal", "uniform"]
 
         assert angle_mode in self._angle_modes, "You must use a built-in angle mode"
+        assert radius_mode in self._radius_modes, "You must use a built-in radius mode"
+        assert (
+            positional_perturbation in self._perturbations
+        ), "You must use a built-in positional perturbation mode"
 
         self.angle_mode = angle_mode
         self.radius_mode = radius_mode
-        self.camera_type = camera_type
+        self.positional_perturbation = positional_perturbation
 
         assert (
             0.00640536 <= fov_x <= 3.01675
@@ -146,16 +149,36 @@ class LeopardiCamera:
                 + self._radius_min
             )
 
-        blender_string = self._self_to_blend(radius, theta, phi)
+        # Handle the positional perturbation
+        if self.positional_perturbation:
+
+            perturb_range = max(0, radius - 1)
+
+            if perturb_range == 0 or self.positional_perturbation == "fixed":
+                perturb_x = perturb_y = perturb_z = 0
+
+            elif self.positional_perturbation == "normal":
+                perturb_x, perturb_y, perturb_z = (
+                    random.normalvariate(0, perturb_range / 3) for _ in range(3)
+                )  # Constrain 99.7% to be within 3 standard deviations
+
+            elif self.positional_perturbation == "uniform":
+                perturb_x, perturb_y, perturb_z = (
+                    random.uniform(-perturb_range, perturb_range) for _ in range(3)
+                )
+
+        blender_string = self._self_to_blend(
+            radius, theta, phi, perturb_x, perturb_y, perturb_z
+        )
 
         return blender_string
 
-    def _self_to_blend(self, radius, theta, phi):
+    def _self_to_blend(self, radius, theta, phi, perturb_x, perturb_y, perturb_z):
         """
         Formats the string to be passed to Blender for rendering
         """
 
-        return f" -r {radius} -tta {theta} -phi {phi} -fovx {self.fov_x} -fovy {self.fov_y} -le {self.lens} -sh {self.sensor_height} -sw {self.sensor_width} "
+        return f" -r {radius} -tta {theta} -phi {phi} -fovx {self.fov_x} -fovy {self.fov_y} -le {self.lens} -sh {self.sensor_height} -sw {self.sensor_width} -px {perturb_x} -py {perturb_y} -pz {perturb_z}"
 
     def _cartesian_to_spherical(self, x, y, z):
         theta = atan(y / x)

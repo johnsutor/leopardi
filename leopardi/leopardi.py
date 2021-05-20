@@ -28,6 +28,7 @@ class Leopardi:
         background_loader: leopardi.BackgroundLoader,
         model_loader: leopardi.ModelLoader,
         renderer: leopardi.LeopardiRenderer,
+        lighting: leopardi.LeopardiLighting,
         blender_directory: str = None,
         render_directory: str = "./renders",
         num_jobs: int = 1,
@@ -107,6 +108,7 @@ class Leopardi:
         self.background_loader = background_loader
         self.model_loader = model_loader
         self.renderer = renderer
+        self.lighting = lighting
 
         self._work_directory = os.getcwd()
         self._model_directory = os.path.realpath(self.model_loader._model_directory)
@@ -138,6 +140,7 @@ class Leopardi:
         camera_settings = self.camera()
         model = self.model_loader(i)
         render = self.renderer()
+        lighting_settings = self.lighting()
 
         os.system(
             "blender -b --python "
@@ -147,6 +150,7 @@ class Leopardi:
             + " - rc "
             + str(i)
             + camera_settings
+            + lighting_settings
             + " -m "
             + model
             + " -rd "
