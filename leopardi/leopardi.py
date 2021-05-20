@@ -14,6 +14,8 @@ from .renderer import LeopardiRenderer
 from .lighting import LeopardiLighting
 import os
 import platform
+import importlib
+import signal
 from joblib import Parallel, delayed
 from PIL import Image
 
@@ -144,6 +146,9 @@ class Leopardi:
             os.mkdir(render_directory)
 
         self._render_directory = os.path.realpath(render_directory)
+        self._script_directory = importlib.util.find_spec(
+            "leopardi"
+        ).submodule_search_locations[0]
 
         # Create render config files as needed
         if self.renderer.labels:
@@ -155,16 +160,21 @@ class Leopardi:
                         f.write(str(m[:-4]) + "\n")
 
     def render(self, n: int = 0):
-        os.chdir(self._blender_directory)
-        Parallel(n_jobs=self._num_jobs, temp_folder="/tmp")(
-            delayed(self._render_single)(i) for i in range(n)
-        )
-        os.chdir(self._work_directory)
-        Parallel(n_jobs=self._num_jobs, temp_folder="/tmp")(
-            delayed(self._apply_background)(i) for i in range(n)
-        )
+        try:
+            os.chdir(self._blender_directory)
+            Parallel(n_jobs=self._num_jobs, temp_folder="/tmp")(
+                delayed(self._render_single)(i) for i in range(n)
+            )
 
-    def _render_single(self, i):
+            os.chdir(self._work_directory)
+            Parallel(n_jobs=self._num_jobs, temp_folder="/tmp")(
+                delayed(self._apply_background)(i) for i in range(n)
+            )
+
+        except:
+            os.chdir(self._work_directory)
+
+    def _render_single(self, i: int):
         camera_settings = self.camera()
         model = self.model_loader(i)
         render = self.renderer()
@@ -172,10 +182,10 @@ class Leopardi:
 
         os.system(
             "blender -b --python "
+            + self._script_directory
+            + "/_blender.py -- -wd "
             + self._work_directory
-            + "/leopardi/_blender.py -- -wd "
-            + self._work_directory
-            + " - rc "
+            + " -rc "
             + str(i)
             + camera_settings
             + lighting_settings
@@ -195,6 +205,7 @@ class Leopardi:
             if "render_" in f
             if f.endswith(tuple(Image.registered_extensions().keys()))
         ]
+
         render = Image.open(self._render_directory + "/" + renders[i]).convert("RGBA")
         rw, rh = render.size
 
