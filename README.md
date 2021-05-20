@@ -27,11 +27,12 @@ import leopardi
 BLENDER_DIR = "C:\Program Files\Blender Foundation\Blender 2.92"
 
 camera = leopardi.LeopardiCamera()
+lighting = leopardi.LeopardiLighting()
+renderer = leopardi.LeopardiRenderer()
 model_loader = leopardi.ModelLoader()
 background_loader = leopardi.BackgroundLoader()
-renderer = leopardi.LeopardiRenderer()
 
-engine = leopardi.Leopardi(camera, background_loader, model_loader, renderer, blender_directory=BLENDER_DIR)
+engine = leopardi.Leopardi(camera, lighting, renderer, background_loader, model_loader)
 engine.render(1)
 ```
 
@@ -43,10 +44,11 @@ import leopardi
 BLENDER_DIR = "C:\Program Files\Blender Foundation\Blender 2.92"
 
 camera = leopardi.LeopardiCamera()
+lighting = leopardi.LeopardiLighting()
+renderer = leopardi.LeopardiRenderer(labels=["DEPTH", "YOLO"])
 model_loader = leopardi.ModelLoader()
 background_loader = leopardi.BackgroundLoader()
-renderer = leopardi.LeopardiRenderer(labels=["DEPTH", "YOLO"])
 
-engine = leopardi.Leopardi(camera, background_loader, model_loader, renderer, blender_directory=BLENDER_DIR)
+engine = leopardi.Leopardi(camera, lighting, renderer, background_loader, model_loader)
 engine.render(1)
 ```

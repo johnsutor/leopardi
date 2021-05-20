@@ -19,16 +19,23 @@ class Leopardi:
     The base class for the Leopardi library
 
     Args:
-
+        camera: (leopardi.LeopardiCamera) A LeopardiCamera class, either with the default arguments or additional arguments.
+        lighting: (leopardi.LeopardiLighting) A LeopardiLighting class, either with the default arguments or additional arguments.
+        renderer: (leopardi.LeopardiRenderer) A LeopardiRenderer class, either with the default arguments or additional arguments.
+        background_loader: (leopardi.BackgroundLoader) A BackgroundLoader class, either with the default arguments or additional arguments.
+        model_loader: (leopardi.ModelLoader) A ModelLoader class, either with the default arguments or additional arguments.
+        blender_directory (str, None) The path to the directory containing the blender.exe file. If no path is provided, Leopardi will attempt to search for this file based on the operating system.
+        render_directory (str, "./renders") The path to the directory to hold all renders.
+        num_jobs (int, 1) The number of jobs to dispatch when rendering and applying backgrounds, according to the JobLib package. To use all available cores on the CPU, use -1.
     """
 
     def __init__(
         self,
         camera: leopardi.LeopardiCamera,
+        lighting: leopardi.LeopardiLighting,
+        renderer: leopardi.LeopardiRenderer,
         background_loader: leopardi.BackgroundLoader,
         model_loader: leopardi.ModelLoader,
-        renderer: leopardi.LeopardiRenderer,
-        lighting: leopardi.LeopardiLighting,
         blender_directory: str = None,
         render_directory: str = "./renders",
         num_jobs: int = 1,
@@ -115,6 +122,10 @@ class Leopardi:
         self._background_directory = os.path.realpath(
             self.background_loader._background_directory
         )
+
+        if not os.path.isdir(render_directory):
+            os.mkdir(render_directory)
+
         self._render_directory = os.path.realpath(render_directory)
 
         # Create render config files as needed

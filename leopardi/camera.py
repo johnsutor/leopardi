@@ -16,14 +16,31 @@ class LeopardiCamera:
     The base camera class for rendering within Blender
 
     Args:
-
+        angle_mode: (str ["RANDOM", "FIBONACCI", "ICOSPHERE"], "RANDOM") Method by which to select an angle to position the camera. If either "FIBONACCI" or "ICOSPHERE", this class will render predefined points to choose placement for the camera.
+        radius_mode: (str ["FIXED", "UNIFORM", "LOG NORMAL"], "FIXED") Method by which to select a radius to position the camera. "UNIFORM" and "LOG NORMAL" specify random ways of generating a radius, and allow for additional keyword arguments to be passed to set the minimum and maximum radius, as well as the mean and standard deviation of the radius (respectively).
+        positional_perturbation: (str ["FIXED", "NORMAL", "UNIFORM"], "FIXED") Method by which to perturb the camera's position in the x, y, and z direction.
+        fov_x: (float, 0.00640536) The field of view of the camera horizontally, must be in the range [0.00640536, 3.01675].
+        fov_y: (float, 0.00640536) The field of view of the camera vertically, must be in the range [0.00640536, 3.01675].
+        lens: (float, 50.0) The size of the camera lens in millimeters. Must be greater than or equal to one millimeter.
+        sensor_height: (float, 24.0) The vertical size of the camera sensor in millimeters. Must be greater than or equal to one millimeter.
+        sensor_width: (float, 36.0) The horizontal size of the camera sensor in millimeters. Must be greater than or equal to one millimeter.
+        phi_min: (float, 0.0) The minimum angle Phi to use for the camera in radians. Must be in the range [0., pi / 2)
+        phi_max: (float, pi / 2) The maximum angle Phi to use for the camera in radians. Must be in the range (0., pi / 2]
+        theta_min: (float, 0.0) The minimum angle Theta to use for the camera in radians. Must be in the range [0., 2 * pi)
+        theta_max: (float, 2 * pi) The maximum angle Theta to use for the camera in radians. Must be in the range (0., 2 * pi]
+        radius: (float, 1.0) The radius to be used for fixed rendering
+    Keyword Args:
+        radius_mean: (float, 0.0) The mean of the log normal distribution to accompany the radius mode "LOG NORMAL"
+        radius_std: (float, 1.0) The standard deviation of the log normal distribution to accompany the radius mode "LOG NORMAL"
+        radius_min: (float, 0.5) The minimum radius of the uniform distribution to accompany the radius mode "UNIFORM" or "LOG_NORMAL"
+        radius_max: (float, 1.5) The maximum radius of the uniform distribution to accompany the radius mode "UNIFORM"
     """
 
     def __init__(
         self,
-        angle_mode: str = "random",
-        radius_mode: str = "fixed",
-        positional_perturbation: str = "fixed",
+        angle_mode: str = "RANDOM",
+        radius_mode: str = "FIXED",
+        positional_perturbation: str = "FIXED",
         fov_x: float = 0.00640536,
         fov_y: float = 0.00640536,
         lens: float = 50.0,
@@ -37,9 +54,14 @@ class LeopardiCamera:
         **kwargs,
     ):
 
-        self._angle_modes = ["random", "fibonacci", "icosphere"]
-        self._radius_modes = ["fixed", "uniform", "log_normal"]
-        self._perturbations = ["fixed", "normal", "uniform"]
+        self._angle_modes = ["RANDOM", "FIBONACCI", "ICOSPHERE"]
+        self._radius_modes = ["FIXED", "UNIFORM", "LOG NORMAL"]
+        self._perturbations = ["FIXED", "NORMAL", "UNIFORM"]
+
+        angle_mode = angle_mode.upper().strip()
+        radius_mode = radius_mode.upper().strip()
+        positional_perturbation = positional_perturbation.upper().strip()
+
 
         assert angle_mode in self._angle_modes, "You must use a built-in angle mode"
         assert radius_mode in self._radius_modes, "You must use a built-in radius mode"
@@ -61,12 +83,16 @@ class LeopardiCamera:
         self.fov_x = fov_x
         self.fov_y = fov_y
 
-        assert lens >= 1.0, "lens size must be greater than one millimeter"
+        assert lens >= 1.0, "lens size must be greater than or equal to one millimeter"
 
         self.lens = lens
 
-        assert sensor_height > 1.0, "Sensor height must be greater than one millimeter"
-        assert sensor_width > 1.0, "Sensor width must be greater than one millimeter"
+        assert (
+            sensor_height >= 1.0
+        ), "Sensor height must be greater than or equal to one millimeter"
+        assert (
+            sensor_width >= 1.0
+        ), "Sensor width must be greater than or equal to one millimeter"
 
         self.sensor_height = sensor_height
         self.sensor_width = sensor_width
@@ -91,17 +117,17 @@ class LeopardiCamera:
         #
         # TODO: Generate KWARGS documentation
         #
-        if "fibonacci" in self.angle_mode:
+        if "FIBONACCI" in self.angle_mode:
             self._predefined_points = self._generate_fibonacci(kwargs["num_points"])
 
         #
         # TODO: Generate KWARGS documentation
         #
-        elif "icosphere" in self.angle_mode:
+        elif "ICOSPHERE" in self.angle_mode:
             self._predefined_points = self._generate_icosphere(kwargs["subdivisions"])
 
         # Determine radii modes
-        if "log_normal" in radius_mode:
+        if "LOG NORMAL" in radius_mode:
             if "radius_mean" in kwargs and "radius_std" in kwargs:
                 self._radius_mean, self._radius_std = (
                     kwargs["radius_mean"],
@@ -115,7 +141,7 @@ class LeopardiCamera:
             else:
                 self._radius_min = 0
 
-        if "uniform" in radius_mode:
+        if "UNIFORM" in radius_mode:
             if "radius_min" in kwargs and "radius_max" in kwargs:
                 self._radius_min, self._radius_max = (
                     max(0, kwargs["radius_min"]),
@@ -126,24 +152,24 @@ class LeopardiCamera:
 
     def __call__(self, n: int = None):
         # Handle the angle mode
-        if self.angle_mode is "random":
+        if self.angle_mode == "RANDOM":
             phi = (self.phi_max - self.phi_min) * random.random() + self.phi_min
             theta = (self.theta_max - self.theta_min) * random.random() + self.theta_min
 
-        elif "random" in self.angle_mode:
+        elif "RANDOM" in self.angle_mode:
             theta, phi = random.choice(self._predefined_points)
 
-        elif "iterate" in self.angle_mode:
+        elif "ITERATE" in self.angle_mode:
             theta, phi = self._predefined_points[n]
 
         # Handle the radius mode
-        if self.radius_mode is "fixed":
+        if self.radius_mode == "FIXED":
             radius = self.radius
 
-        elif self.radius_mode is "uniform":
+        elif self.radius_mode == "UNIFORM":
             radius = random.uniform(self._radius_min, self._radius_max)
 
-        elif self.radius_mode is "log_normal":
+        elif self.radius_mode == "LOG NORMAL":
             radius = (
                 random.lognormvariate(self._radius_mean, self._radius_std)
                 + self._radius_min
@@ -154,15 +180,15 @@ class LeopardiCamera:
 
             perturb_range = max(0, radius - 1)
 
-            if perturb_range == 0 or self.positional_perturbation == "fixed":
+            if perturb_range == 0 or self.positional_perturbation == "FIXED":
                 perturb_x = perturb_y = perturb_z = 0
 
-            elif self.positional_perturbation == "normal":
+            elif self.positional_perturbation == "NORMAL":
                 perturb_x, perturb_y, perturb_z = (
                     random.normalvariate(0, perturb_range / 3) for _ in range(3)
                 )  # Constrain 99.7% to be within 3 standard deviations
 
-            elif self.positional_perturbation == "uniform":
+            elif self.positional_perturbation == "UNIFORM":
                 perturb_x, perturb_y, perturb_z = (
                     random.uniform(-perturb_range, perturb_range) for _ in range(3)
                 )

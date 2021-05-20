@@ -143,9 +143,11 @@ elif args.lighting_type == "SPOT":
     light_obj = bpy.data.objects.new("Light", light)
     light_obj.location = (x, y, z)
 
-    # Calculate direction to rotate the light 
-    rotation = Vector((x,y,z)).to_track_quat('Z', 'Y')
-    light_obj.rotation_euler =  rotation.to_euler() #(args.phi, 0.0, args.theta + math.pi / 2)
+    # Calculate direction to rotate the light
+    rotation = Vector((x, y, z)).to_track_quat("Z", "Y")
+    light_obj.rotation_euler = (
+        rotation.to_euler()
+    )  # (args.phi, 0.0, args.theta + math.pi / 2)
 
     bpy.context.collection.objects.link(light_obj)
     bpy.context.view_layer.objects.active = light_obj
@@ -162,9 +164,9 @@ elif args.lighting_type == "AREA":
     light_obj = bpy.data.objects.new("Light", light)
     light_obj.location = (x, y, z)
 
-    # Calculate direction to rotate the light 
-    rotation = Vector((x,y,z)).to_track_quat('Z', 'Y')
-    light_obj.rotation_euler =  rotation.to_euler()
+    # Calculate direction to rotate the light
+    rotation = Vector((x, y, z)).to_track_quat("Z", "Y")
+    light_obj.rotation_euler = rotation.to_euler()
 
     bpy.context.collection.objects.link(light_obj)
     bpy.context.view_layer.objects.active = light_obj
@@ -177,8 +179,8 @@ elif args.lighting_type == "FLASHLIGHT":
     light_in.spot_size = math.pi / 24
     light_in.energy = 10 * light_in.energy
 
-    # Calculate direction to rotate the light 
-    rotation = Vector((x,y,z)).to_track_quat('Z', 'Y')
+    # Calculate direction to rotate the light
+    rotation = Vector((x, y, z)).to_track_quat("Z", "Y")
 
     light_obj_out = bpy.data.objects.new("Light", light_out)
     light_obj_out.location = (x, y, z)

@@ -18,24 +18,28 @@ class BackgroundLoader:
     The base background loading class
 
     Args:
-
+        background_directory: (str, os.getcwd() + "/backgrounds/") The directory containing all background images to be used in the renderer.
+        background_mode: (str ["RANDOM", "ITERATIVE"], "RANDOM") The method by which to select a background image to be used.
+        sampling_fn: (Optional Callable) A function to be used to sample backgroungs. Should return a single string representing a path to a background image.
     """
 
     def __init__(
         self,
         background_directory: str = os.getcwd() + "/backgrounds/",
-        background_mode: str = "random",
+        background_mode: str = "RANDOM",
         sampling_fn: Optional[Callable[[str], Any]] = None,
     ):
-        self._background_modes = ["random", "iterative"]
+        self._background_modes = ["RANDOM", "ITERATIVE"]
         self._image_formats = tuple(Image.registered_extensions().keys())
+
+        background_mode = background_mode.upper().strip()
+
+        assert (
+            background_mode in self._background_modes
+        ), "You must use a built-in background loading method"
 
         self._background_directory = background_directory
         self.background_mode = background_mode
-
-        assert (
-            self.background_mode in self._background_modes
-        ), "You must use a built-in background loading method"
 
         self._sampling_fn = sampling_fn
 
@@ -57,7 +61,7 @@ class BackgroundLoader:
         if self._sampling_fn is not None:
             return self._sampling_fn(self._background_directory)
 
-        elif self.background_mode is "random":
+        elif self.background_mode == "RANDOM":
             img = random.choice(
                 [
                     f
@@ -67,7 +71,7 @@ class BackgroundLoader:
                 ]
             )
 
-        elif self.background_mode is "iterative":
+        elif self.background_mode == "ITERATIVE":
             assert (
                 n is not None
             ), "You must provide the iteration to use iterative loading"

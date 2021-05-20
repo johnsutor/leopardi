@@ -17,25 +17,29 @@ class ModelLoader:
     The base model loading class
 
     Args:
-
+        model_directory: (str, "./models/") The directory containing either .fbx or .obj models to be rendered.
+        model_mode: (str ["RANDOM", "ITERATIVE"], "RANDOM") The method for choosing a model to be rendered. 
+        sampling_fn: (Optional Callable) A function to be used to sample models. Should return a single string representing a path to a model.
     """
 
     def __init__(
         self,
         model_directory: str = "./models/",
-        model_mode: str = "random",
+        model_mode: str = "RANDOM",
         sampling_fn: Optional[Callable[[str], Any]] = None,
     ):
 
-        self._model_modes = ["random", "iterative"]
+        self._model_modes = ["RANDOM", "ITERATIVE"]
         self._model_formats = (".fbx", ".obj")
+
+        model_mode = model_mode.upper().strip()
+
+        assert (
+            model_mode in self._model_modes
+        ), "You must use a built-in model loading method"
 
         self._model_directory = os.path.realpath(model_directory) + "/"
         self.model_mode = model_mode
-
-        assert (
-            self.model_mode in self._model_modes
-        ), "You must use a built-in model loading method"
 
         self._sampling_fn = sampling_fn
 
@@ -57,7 +61,7 @@ class ModelLoader:
         if self._sampling_fn is not None:
             return self._sampling_fn(self._model_directory)
 
-        elif self.model_mode == "random":
+        elif self.model_mode == "RANDOM":
             model = random.choice(
                 [
                     f
@@ -67,7 +71,7 @@ class ModelLoader:
                 ]
             )
 
-        elif self.model_mode == "iterative":
+        elif self.model_mode == "ITERATIVE":
             assert (
                 n is not None
             ), "You must provide the iteration to use iterative loading"

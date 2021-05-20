@@ -9,6 +9,7 @@ This file contains utilities and classes for controlling different aspects of le
 from typing import Union
 import random
 
+
 class LeopardiLighting:
     """
     The base lighting class for rendering within Blender
