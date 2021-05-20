@@ -36,6 +36,7 @@ parser.add_argument("-m", dest="model", type=str, required=True)
 # parser.add_argument("-b", dest="background", type=str, required=True)
 parser.add_argument("-wd", dest="work_directory", type=str, required=True)
 parser.add_argument("-s", dest="shadow", action="store_true")
+parser.add_argument("-as", dest="autoscale", action="store_true")
 parser.add_argument("-rc", dest="render_count", type=int, default=0)
 parser.add_argument("-rd", dest="render_directory", type=str, required=True)
 parser.add_argument(
@@ -70,41 +71,45 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.context.scene.render.resolution_x = args.resolution_x
 bpy.context.scene.render.resolution_y = args.resolution_y
 
-bpy.ops.import_scene.fbx(filepath=args.model)
+if args.model.endswith('.fbx'):
+    bpy.ops.import_scene.fbx(filepath=args.model)
+elif args.model.endswith('.obj'):
+    bpy.ops.import_scene.fbx(filepath=args.model)
 
-# Select all objects and scale to 2^3 cube centered
-# about the origin
-minx, miny, minz, maxx, maxy, maxz = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+if args.autoscale:
+    # Select all objects and scale to 2^3 cube centered
+    # about the origin
+    minx, miny, minz, maxx, maxy, maxz = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
-for obj in bpy.data.objects.keys():
-    for p in bpy.data.objects[obj].bound_box:
-        x, y, z = p
+    for obj in bpy.data.objects.keys():
+        for p in bpy.data.objects[obj].bound_box:
+            x, y, z = p
 
-        if x < minx:
-            minx = x
-        elif x > maxx:
-            maxx = x
+            if x < minx:
+                minx = x
+            elif x > maxx:
+                maxx = x
 
-        if y < miny:
-            miny = y
-        elif y > maxy:
-            maxy = y
+            if y < miny:
+                miny = y
+            elif y > maxy:
+                maxy = y
 
-        if z < minz:
-            minz = z
-        elif z > maxz:
-            maxz = z
+            if z < minz:
+                minz = z
+            elif z > maxz:
+                maxz = z
 
-xdim = maxx - minx
-ydim = maxy - miny
-zdim = maxz - minz
+    xdim = maxx - minx
+    ydim = maxy - miny
+    zdim = maxz - minz
 
-scale_factor = 2.0 / max((xdim, ydim, zdim))
+    scale_factor = 2.0 / max((xdim, ydim, zdim))
 
-bpy.ops.object.select_all(action="SELECT")
-bpy.ops.transform.resize(value=(scale_factor, scale_factor, scale_factor))
-bpy.context.view_layer.update()
-bpy.ops.object.select_all(action="DESELECT")
+    bpy.ops.object.select_all(action="SELECT")
+    bpy.ops.transform.resize(value=(scale_factor, scale_factor, scale_factor))
+    bpy.context.view_layer.update()
+    bpy.ops.object.select_all(action="DESELECT")
 
 # Convert the spherical coordinates to Cartesian coordinates
 x = args.radius * math.sin(args.phi) * math.cos(args.theta) + args.perturbation_x

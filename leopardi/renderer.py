@@ -19,6 +19,8 @@ class LeopardiRenderer:
         resolution_x: (int, 1024) The horizontal resolution, in pixels, for the rendered image.
         resolution_y: (int, 1024) The vertical resolution, in pixels, for the rendered image.
         render_engine: (str ["BLENDER_EEVEE", "CYCLES"], "BLENDER_EEVEE") The Blender rendering image used to create renders.
+        use_shadow: (bool, False) Whether or not to generate a shadown under an object.
+        autoscale: (bool, False) Whether or not to automatically scale an object.
     """
 
     def __init__(
@@ -28,6 +30,7 @@ class LeopardiRenderer:
         resolution_y: int = 1024,
         render_engine: str = "BLENDER_EEVEE",
         use_shadow: bool = False,
+        autoscale: bool = False,
     ):
         """
         The base class for defining rendering specs
@@ -37,6 +40,8 @@ class LeopardiRenderer:
             resolution_x: (int, 1024) The horizontal resolution, in pixels, for the rendered image.
             resolution_y: (int, 1024) The vertical resolution, in pixels, for the rendered image.
             render_engine: (str ["BLENDER_EEVEE", "CYCLES"], "BLENDER_EEVEE") The Blender rendering image used to create renders.
+            use_shadow: (bool, False) Whether or not to generate a shadown under an object.
+            autoscale: (bool, False) Whether or not to auto scale an object.
         """
         self._label_modes = ["YOLO", "COCO", "PASCAL", "DEPTH"]
 
@@ -49,6 +54,7 @@ class LeopardiRenderer:
         self.resolution_y = resolution_y
         self.render_engine = render_engine
         self.use_shadow = use_shadow
+        self.autoscale = autoscale
         if type(labels) == str:
             labels = labels.upper().strip()
             assert (
@@ -72,4 +78,4 @@ class LeopardiRenderer:
         self.render_engine = render_engine
 
     def __call__(self):
-        return f" -l {' '.join(self.labels) if self.labels else ''} -rx {self.resolution_x} -ry {self.resolution_y} -re {self.render_engine} {'-s' if self.use_shadow else ''} "
+        return f" -l {' '.join(self.labels) if self.labels else ''} -rx {self.resolution_x} -ry {self.resolution_y} -re {self.render_engine} {'-s' if self.use_shadow else ''} {'-as' if self.autoscale else ''}"
