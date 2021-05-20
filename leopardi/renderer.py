@@ -29,12 +29,16 @@ class LeopardiRenderer:
         render_engine: str = "BLENDER_EEVEE",
         use_shadow: bool = False,
     ):
-        self._label_modes = [
-            "YOLO",
-            "COCO",
-            "PASCAL",
-            "DEPTH"
-        ]
+        """
+        The base class for defining rendering specs
+
+        Args:
+            labels: (str | list, ["YOLO", "COCO", "PASCAL", "DEPTH"], None) A list of labels or sinle label to generate with each render.
+            resolution_x: (int, 1024) The horizontal resolution, in pixels, for the rendered image.
+            resolution_y: (int, 1024) The vertical resolution, in pixels, for the rendered image.
+            render_engine: (str ["BLENDER_EEVEE", "CYCLES"], "BLENDER_EEVEE") The Blender rendering image used to create renders.
+        """
+        self._label_modes = ["YOLO", "COCO", "PASCAL", "DEPTH"]
 
         self._render_engines = [
             "BLENDER_EEVEE",
@@ -60,7 +64,9 @@ class LeopardiRenderer:
 
         render_engine = render_engine.upper().strip()
 
-        assert render_engine in self._render_engines, f"{render_engine} is not a supported render engine"
+        assert (
+            render_engine in self._render_engines
+        ), f"{render_engine} is not a supported render engine"
 
         self.labels = labels
         self.render_engine = render_engine

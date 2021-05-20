@@ -18,7 +18,7 @@ class ModelLoader:
 
     Args:
         model_directory: (str, "./models/") The directory containing either .fbx or .obj models to be rendered.
-        model_mode: (str ["RANDOM", "ITERATIVE"], "RANDOM") The method for choosing a model to be rendered. 
+        model_mode: (str ["RANDOM", "ITERATIVE"], "RANDOM") The method for choosing a model to be rendered.
         sampling_fn: (Optional Callable) A function to be used to sample models. Should return a single string representing a path to a model.
     """
 
@@ -28,7 +28,14 @@ class ModelLoader:
         model_mode: str = "RANDOM",
         sampling_fn: Optional[Callable[[str], Any]] = None,
     ):
+        """
+        The base model loading class
 
+        Args:
+            model_directory: (str, "./models/") The directory containing either .fbx or .obj models to be rendered.
+            model_mode: (str ["RANDOM", "ITERATIVE"], "RANDOM") The method for choosing a model to be rendered.
+            sampling_fn: (Optional Callable) A function to be used to sample models. Should return a single string representing a path to a model.
+        """
         self._model_modes = ["RANDOM", "ITERATIVE"]
         self._model_formats = (".fbx", ".obj")
 

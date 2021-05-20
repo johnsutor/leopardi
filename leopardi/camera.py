@@ -53,6 +53,29 @@ class LeopardiCamera:
         radius=1.0,
         **kwargs,
     ):
+        """
+        The base camera class for rendering within Blender
+
+        Args:
+            angle_mode: (str ["RANDOM", "FIBONACCI", "ICOSPHERE"], "RANDOM") Method by which to select an angle to position the camera. If either "FIBONACCI" or "ICOSPHERE", this class will render predefined points to choose placement for the camera.
+            radius_mode: (str ["FIXED", "UNIFORM", "LOG NORMAL"], "FIXED") Method by which to select a radius to position the camera. "UNIFORM" and "LOG NORMAL" specify random ways of generating a radius, and allow for additional keyword arguments to be passed to set the minimum and maximum radius, as well as the mean and standard deviation of the radius (respectively).
+            positional_perturbation: (str ["FIXED", "NORMAL", "UNIFORM"], "FIXED") Method by which to perturb the camera's position in the x, y, and z direction.
+            fov_x: (float, 0.00640536) The field of view of the camera horizontally, must be in the range [0.00640536, 3.01675].
+            fov_y: (float, 0.00640536) The field of view of the camera vertically, must be in the range [0.00640536, 3.01675].
+            lens: (float, 50.0) The size of the camera lens in millimeters. Must be greater than or equal to one millimeter.
+            sensor_height: (float, 24.0) The vertical size of the camera sensor in millimeters. Must be greater than or equal to one millimeter.
+            sensor_width: (float, 36.0) The horizontal size of the camera sensor in millimeters. Must be greater than or equal to one millimeter.
+            phi_min: (float, 0.0) The minimum angle Phi to use for the camera in radians. Must be in the range [0., pi / 2)
+            phi_max: (float, pi / 2) The maximum angle Phi to use for the camera in radians. Must be in the range (0., pi / 2]
+            theta_min: (float, 0.0) The minimum angle Theta to use for the camera in radians. Must be in the range [0., 2 * pi)
+            theta_max: (float, 2 * pi) The maximum angle Theta to use for the camera in radians. Must be in the range (0., 2 * pi]
+            radius: (float, 1.0) The radius to be used for fixed rendering
+        Keyword Args:
+            radius_mean: (float, 0.0) The mean of the log normal distribution to accompany the radius mode "LOG NORMAL"
+            radius_std: (float, 1.0) The standard deviation of the log normal distribution to accompany the radius mode "LOG NORMAL"
+            radius_min: (float, 0.5) The minimum radius of the uniform distribution to accompany the radius mode "UNIFORM" or "LOG_NORMAL"
+            radius_max: (float, 1.5) The maximum radius of the uniform distribution to accompany the radius mode "UNIFORM"
+        """
 
         self._angle_modes = ["RANDOM", "FIBONACCI", "ICOSPHERE"]
         self._radius_modes = ["FIXED", "UNIFORM", "LOG NORMAL"]
@@ -61,7 +84,6 @@ class LeopardiCamera:
         angle_mode = angle_mode.upper().strip()
         radius_mode = radius_mode.upper().strip()
         positional_perturbation = positional_perturbation.upper().strip()
-
 
         assert angle_mode in self._angle_modes, "You must use a built-in angle mode"
         assert radius_mode in self._radius_modes, "You must use a built-in radius mode"

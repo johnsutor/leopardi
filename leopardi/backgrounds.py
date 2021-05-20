@@ -29,6 +29,14 @@ class BackgroundLoader:
         background_mode: str = "RANDOM",
         sampling_fn: Optional[Callable[[str], Any]] = None,
     ):
+        """
+        The base background loading class
+
+        Args:
+            background_directory: (str, os.getcwd() + "/backgrounds/") The directory containing all background images to be used in the renderer.
+            background_mode: (str ["RANDOM", "ITERATIVE"], "RANDOM") The method by which to select a background image to be used.
+            sampling_fn: (Optional Callable) A function to be used to sample backgroungs. Should return a single string representing a path to a background image.
+        """
         self._background_modes = ["RANDOM", "ITERATIVE"]
         self._image_formats = tuple(Image.registered_extensions().keys())
 

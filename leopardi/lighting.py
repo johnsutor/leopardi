@@ -26,6 +26,19 @@ class LeopardiLighting:
     """
 
     def __init__(self, types: Union[str, list] = "SUN", **kwargs):
+        """
+        The base lighting class for rendering within Blender
+
+        Args:
+            types: (Union[str, list], "SUN") the type or types to generate the lighting for the scene
+        Kwargs:
+            spot_mode: (str)
+            sun_mode: (str)
+            point_mode: (str)
+            area_mode: (str)
+            flaslight_mode: (str)
+
+        """
         self._lighting_types = ["SPOT", "SUN", "POINT", "AREA", "FLASHLIGHT"]
         self._lighting_modes = ["FIXED", "NORMAL", "UNIFORM"]
 
