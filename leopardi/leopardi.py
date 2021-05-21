@@ -165,14 +165,16 @@ class Leopardi:
             Parallel(n_jobs=self._num_jobs, temp_folder="/tmp")(
                 delayed(self._render_single)(i) for i in range(n)
             )
-
             os.chdir(self._work_directory)
             Parallel(n_jobs=self._num_jobs, temp_folder="/tmp")(
                 delayed(self._apply_background)(i) for i in range(n)
             )
-
-        except:
+        except (KeyboardInterrupt, SystemExit):
             os.chdir(self._work_directory)
+            raise KeyboardInterrupt("Exiting program")
+        except Exception as e:
+            os.chdir(self._work_directory)
+            raise Exception(e)
 
     def _render_single(self, i: int):
         camera_settings = self.camera()

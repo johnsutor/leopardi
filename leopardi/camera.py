@@ -34,6 +34,7 @@ class LeopardiCamera:
         radius_std: (float, 1.0) The standard deviation of the log normal distribution to accompany the radius mode "LOG NORMAL"
         radius_min: (float, 0.5) The minimum radius of the uniform distribution to accompany the radius mode "UNIFORM" or "LOG_NORMAL"
         radius_max: (float, 1.5) The maximum radius of the uniform distribution to accompany the radius mode "UNIFORM"
+        perturbation_scale: (float, 0.5) The scale applied to the calculated positional perturbations.
     """
 
     def __init__(
@@ -75,6 +76,9 @@ class LeopardiCamera:
             radius_std: (float, 1.0) The standard deviation of the log normal distribution to accompany the radius mode "LOG NORMAL"
             radius_min: (float, 0.5) The minimum radius of the uniform distribution to accompany the radius mode "UNIFORM" or "LOG_NORMAL"
             radius_max: (float, 1.5) The maximum radius of the uniform distribution to accompany the radius mode "UNIFORM"
+            perturbation_scale: (float, 0.5) The scale applied to the calculated positional perturbations.
+            subdivisions: (int, 0) The number of subdivisions to create for the Icosphere.
+            num_points: (int, 100) The number of points to create on the Fibonacci sphere.
         """
 
         self._angle_modes = ["RANDOM", "FIBONACCI", "ICOSPHERE"]
@@ -94,6 +98,10 @@ class LeopardiCamera:
         self.angle_mode = angle_mode
         self.radius_mode = radius_mode
         self.positional_perturbation = positional_perturbation
+
+        self.perturbation_scale = (
+            kwargs["perturbation_scale"] if "perturbation_scale" in kwargs else 0.5
+        )
 
         assert (
             0.00640536 <= fov_x <= 3.01675
@@ -135,18 +143,13 @@ class LeopardiCamera:
         assert radius > 0.0, "Radius must be greater than zero"
         self.radius = radius
 
-        # Determine predefined angle points
-        #
-        # TODO: Generate KWARGS documentation
-        #
         if "FIBONACCI" in self.angle_mode:
-            self._predefined_points = self._generate_fibonacci(kwargs["num_points"])
+            num_points = kwargs["num_points"] if "num_points" in kwargs else 100
+            self._predefined_points = self._generate_fibonacci(num_points)
 
-        #
-        # TODO: Generate KWARGS documentation
-        #
         elif "ICOSPHERE" in self.angle_mode:
-            self._predefined_points = self._generate_icosphere(kwargs["subdivisions"])
+            subdivisions = kwargs["subdivisions"] if "subdivisions" in kwargs else 0
+            self._predefined_points = self._generate_icosphere(subdivisions)
 
         # Determine radii modes
         if "LOG NORMAL" in radius_mode:
@@ -174,15 +177,12 @@ class LeopardiCamera:
 
     def __call__(self, n: int = None):
         # Handle the angle mode
-        if self.angle_mode == "RANDOM":
-            phi = (self.phi_max - self.phi_min) * random.random() + self.phi_min
-            theta = (self.theta_max - self.theta_min) * random.random() + self.theta_min
-
-        elif "RANDOM" in self.angle_mode:
+        if self.angle_mode in ["ICOSPHERE", "FIBONACCI"]:
             theta, phi = random.choice(self._predefined_points)
 
-        elif "ITERATE" in self.angle_mode:
-            theta, phi = self._predefined_points[n]
+        elif self.angle_mode == "RANDOM":
+            phi = (self.phi_max - self.phi_min) * random.random() + self.phi_min
+            theta = (self.theta_max - self.theta_min) * random.random() + self.theta_min
 
         # Handle the radius mode
         if self.radius_mode == "FIXED":
@@ -200,7 +200,7 @@ class LeopardiCamera:
         # Handle the positional perturbation
         if self.positional_perturbation:
 
-            perturb_range = max(0, radius - 1)
+            perturb_range = max(0, self.perturbation_scale * (radius - 1))
 
             if perturb_range == 0 or self.positional_perturbation == "FIXED":
                 perturb_x = perturb_y = perturb_z = 0
@@ -228,9 +228,9 @@ class LeopardiCamera:
 
         return f" -r {radius} -tta {theta} -phi {phi} -fovx {self.fov_x} -fovy {self.fov_y} -le {self.lens} -sh {self.sensor_height} -sw {self.sensor_width} -px {perturb_x} -py {perturb_y} -pz {perturb_z}"
 
-    def _cartesian_to_spherical(self, x, y, z):
-        theta = atan(y / x)
-        phi = atan(sqrt(x ** 2 + y ** 2) / z)
+    def _cartesian_to_spherical(self, x, y=None, z=None):
+        theta = atan(y / (x + 1e-8))
+        phi = atan(sqrt(x ** 2 + y ** 2) / (z + 1e-8))
 
         return theta, phi
 
@@ -262,9 +262,8 @@ class LeopardiCamera:
         y = [r * sin(a) for r, a in zip(radii, angles)]
 
         verts = list(zip(x, y, z))
-        verts = map(self._cartesian_to_spherical, verts)
+        verts = [self._cartesian_to_spherical(*v) for v in verts]
         verts = self._fix_angle(list(verts))
-
         return verts
 
     def _generate_icosphere(self, subdivisions: int = 0):
@@ -356,8 +355,7 @@ class LeopardiCamera:
                 faces_subdiv.append([v1, v2, v3])
 
             faces = faces_subdiv
-
-        verts = map(self._cartesian_to_spherical, verts)
-        verts = self._fix_angle(list(verts))
+        verts = [self._cartesian_to_spherical(*v) for v in verts]
+        verts = self._fix_angle(verts)
 
         return verts

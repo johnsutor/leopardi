@@ -71,9 +71,9 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.context.scene.render.resolution_x = args.resolution_x
 bpy.context.scene.render.resolution_y = args.resolution_y
 
-if args.model.endswith('.fbx'):
-    bpy.ops.import_scene.fbx(filepath=args.model)
-elif args.model.endswith('.obj'):
+if args.model.endswith(".fbx"):
+    bpy.ops.import_scene.fbx(filepath=args.model, use_anim=False)
+elif args.model.endswith(".obj"):
     bpy.ops.import_scene.fbx(filepath=args.model)
 
 if args.autoscale:
@@ -82,8 +82,8 @@ if args.autoscale:
     minx, miny, minz, maxx, maxy, maxz = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
     for obj in bpy.data.objects.keys():
-        for p in bpy.data.objects[obj].bound_box:
-            x, y, z = p
+        if bpy.data.objects[obj].type == "MESH":
+            x, y, z = bpy.data.objects[obj].dimensions
 
             if x < minx:
                 minx = x
@@ -104,7 +104,7 @@ if args.autoscale:
     ydim = maxy - miny
     zdim = maxz - minz
 
-    scale_factor = 2.0 / max((xdim, ydim, zdim))
+    scale_factor = 0.5 / max((xdim, ydim, zdim))
 
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.transform.resize(value=(scale_factor, scale_factor, scale_factor))
@@ -298,32 +298,7 @@ if args.labels:
                     bound_low_y = min_y
                 if max_y > bound_high_y:
                     bound_high_y = max_y
-        # xlist, ylist = [], []
 
-        # # Print all vertices
-        # for object in bpy.context.scene.objects:
-        #     if object.type == 'MESH':
-        #         for v in object.bound_box:
-        #             coord = object.matrix_world @ Vector(v)
-
-        #             # Get the location on the final rendered image
-        #             img_loc = bpy_extras.object_utils.world_to_camera_view(
-        #                 bpy.context.scene, camera_obj, coord
-        #             )
-
-        #             print(coord)
-        #             print(img_loc)
-
-        #             xlist.append(img_loc.x)
-        #             ylist.append(img_loc.y)
-
-        #         # Choose the bounding coordinates
-        #         low_x = 0.0 if min(xlist) < 0.0 else 1.0 if min(xlist) > 1.0 else min(xlist)
-        #         high_x = 0.0 if max(xlist) < 0.0 else 1.0 if max(xlist) > 1.0 else max(xlist)
-        #         low_y = 0.0 if min(ylist) < 0.0 else 1.0 if min(ylist) > 1.0 else min(ylist)
-        #         high_y = 0.0 if max(ylist) < 0.0 else 1.0 if max(ylist) > 1.0 else max(ylist)
-
-        # Output coordinates YOLO format
         with open(
             args.render_directory
             + "/render_"
