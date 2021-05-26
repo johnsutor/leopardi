@@ -11,6 +11,7 @@ based on the arguments specified.
 import math
 import sys
 import argparse
+from random import randint
 import bpy
 from mathutils import Vector
 
@@ -72,9 +73,14 @@ bpy.context.scene.render.resolution_x = args.resolution_x
 bpy.context.scene.render.resolution_y = args.resolution_y
 
 if args.model.endswith(".fbx"):
-    bpy.ops.import_scene.fbx(filepath=args.model, use_anim=False)
-elif args.model.endswith(".obj"):
     bpy.ops.import_scene.fbx(filepath=args.model)
+
+    # Select random animation frame
+    bpy.context.scene.frame_current = randint(
+        bpy.context.scene.frame_start, bpy.context.scene.frame_end
+    )
+elif args.model.endswith(".obj"):
+    bpy.ops.import_scene.obj(filepath=args.model, use_image_search=True)
 
 if args.autoscale:
     # Select all objects and scale to 2^3 cube centered
@@ -180,8 +186,8 @@ elif args.lighting_type == "FLASHLIGHT":
     light_out = bpy.data.lights.new(name="Light", type="SPOT")
     light_in = bpy.data.lights.new(name="Light", type="SPOT")
 
-    light_out.spot_size = math.pi / 12
-    light_in.spot_size = math.pi / 24
+    light_out.spot_size = math.pi / 4
+    light_in.spot_size = math.pi / 8
     light_in.energy = 10 * light_in.energy
 
     # Calculate direction to rotate the light
