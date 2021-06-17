@@ -72,6 +72,7 @@ class LeopardiCamera:
             theta_max: (float, 2 * pi) The maximum angle Theta to use for the camera in radians. Must be in the range (0., 2 * pi]
             radius: (float, 1.0) The radius to be used for fixed rendering
         Keyword Args:
+            angle_selection: (["RANDOM", "ITERATE"], "RANDOM") The method by which to select the angle from either the Fibonacci or Icosphere angle methods
             radius_mean: (float, 0.0) The mean of the log normal distribution to accompany the radius mode "LOG NORMAL"
             radius_std: (float, 1.0) The standard deviation of the log normal distribution to accompany the radius mode "LOG NORMAL"
             radius_min: (float, 0.5) The minimum radius of the uniform distribution to accompany the radius mode "UNIFORM" or "LOG_NORMAL"
@@ -146,10 +147,16 @@ class LeopardiCamera:
         if "FIBONACCI" in self.angle_mode:
             num_points = kwargs["num_points"] if "num_points" in kwargs else 100
             self._predefined_points = self._generate_fibonacci(num_points)
+            print(f"Created {len(self._predefined_points)} predefined points")
+            self._angle_selection = kwargs["angle_selection"].upper().strip() if "angle_selection" in kwargs else "RANDOM"
+            assert self._angle_selection in ["RANDOM", "ITERATE"], f"Angle mode {self._angle_selection} unsupported."
 
         elif "ICOSPHERE" in self.angle_mode:
             subdivisions = kwargs["subdivisions"] if "subdivisions" in kwargs else 0
             self._predefined_points = self._generate_icosphere(subdivisions)
+            print(f"Created {len(self._predefined_points)} predefined points")
+            self._angle_selection = kwargs["angle_selection"].upper().strip() if "angle_selection" in kwargs else "RANDOM"
+            assert self._angle_selection in ["RANDOM", "ITERATE"], f"Angle mode {self._angle_selection} unsupported."
 
         # Determine radii modes
         if "LOG NORMAL" in radius_mode:
@@ -178,7 +185,12 @@ class LeopardiCamera:
     def __call__(self, n: int = None):
         # Handle the angle mode
         if self.angle_mode in ["ICOSPHERE", "FIBONACCI"]:
-            theta, phi = random.choice(self._predefined_points)
+
+            # Determine how to get the angle 
+            if self._angle_selection == "RANDOM":
+                theta, phi = random.choice(self._predefined_points)
+            else:
+                theta, phi = self._predefined_points[n % len(self._predefined_points)]
 
         elif self.angle_mode == "RANDOM":
             phi = (self.phi_max - self.phi_min) * random.random() + self.phi_min

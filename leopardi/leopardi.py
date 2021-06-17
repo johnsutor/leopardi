@@ -61,7 +61,7 @@ class Leopardi:
         """
 
         SYSTEM = platform.system()
-        if blender_directory is None:
+        if not blender_directory:
             if SYSTEM == "Windows":
                 if os.path.isdir("C:/Program Files/Blender Foundation/"):
                     # Fetch most up-to-date
@@ -177,7 +177,7 @@ class Leopardi:
             raise Exception(e)
 
     def _render_single(self, i: int):
-        camera_settings = self.camera()
+        camera_settings = self.camera(i)
         model = self.model_loader(i)
         render = self.renderer()
         lighting_settings = self.lighting()
