@@ -61,6 +61,7 @@ class Leopardi:
         """
 
         SYSTEM = platform.system()
+        self._blender_command = "blender"
         if not blender_directory:
             if SYSTEM == "Windows":
                 if os.path.isdir("C:/Program Files/Blender Foundation/"):
@@ -70,7 +71,7 @@ class Leopardi:
                         dir.sort()
                         dir = "C:/Program Files/Blender Foundation/" + dir[-1] + "/"
                         self._blender_directory = (
-                            dir if "blender.exe" in os.listdir(dir) else None
+                            dir if any(command in os.listdir(dir) for command in ["blender", "blender.exe"]) else None
                         )
                     except:
                         pass
@@ -92,7 +93,7 @@ class Leopardi:
                             + "/"
                         )
                         self._blender_directory = (
-                            dir if "blender.exe" in os.listdir(dir) else None
+                            dir if any(command in os.listdir(dir) for command in ["blender", "blender.exe"]) else None
                         )
                     except:
                         pass
@@ -102,6 +103,7 @@ class Leopardi:
                     )
 
             elif SYSTEM == "Linux":
+                self._blender_command = "./blender"
                 # /home/mlpc/blender
                 if os.path.isdir(os.path.expanduser("~") + "/blender/"):
                     # Fetch most up-to-date
@@ -110,7 +112,7 @@ class Leopardi:
                         dir.sort()
                         dir = os.path.expanduser("~") + "/blender/" + dir[-1] + "/"
                         self._blender_directory = (
-                            dir if "blender.exe" in os.listdir(dir) else None
+                            dir if any(command in os.listdir(dir) for command in ["blender", "blender.exe"]) else None
                         )
                     except:
                         pass
@@ -183,7 +185,8 @@ class Leopardi:
         lighting_settings = self.lighting()
 
         os.system(
-            "blender -b --python "
+            self._blender_command + 
+            " -b --python "
             + self._script_directory
             + "/_blender.py -- -wd "
             + self._work_directory

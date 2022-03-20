@@ -46,7 +46,7 @@ class BackgroundLoader:
             background_mode in self._background_modes
         ), "You must use a built-in background loading method"
 
-        self._background_directory = background_directory
+        self._background_directory = os.path.realpath(background_directory) + "/"
         self.background_mode = background_mode
 
         self._sampling_fn = sampling_fn
