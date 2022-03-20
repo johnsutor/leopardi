@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="leopardi",
-    version="0.2.23",
+    version="0.2.24",
     author="John Sutor",
     author_email="johnsutor3@gmail.com",
     description="An extensible library for generating 3D synthetic data with Blender that just works.",
