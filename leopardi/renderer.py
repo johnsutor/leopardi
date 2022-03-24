@@ -7,21 +7,23 @@ a directory containing model files.
 
 """
 
-from typing import Union
+from typing import Union, Optional
 
 
 class LeopardiRenderer:
-    """
-    The base class for defining rendering specs
-
-    Args:
-        labels: (str | list, ["YOLO", "COCO", "PASCAL", "DEPTH"], None) A list of labels or sinle label to generate with each render.
-        resolution_x: (int, 1024) The horizontal resolution, in pixels, for the rendered image.
-        resolution_y: (int, 1024) The vertical resolution, in pixels, for the rendered image.
-        render_engine: (str ["BLENDER_EEVEE", "CYCLES"], "BLENDER_EEVEE") The Blender rendering image used to create renders.
-        use_shadow: (bool, False) Whether or not to generate a shadown under an object.
-        autoscale: (bool, False) Whether or not to automatically scale an object.
-    """
+    """The base class for defining rendering specs"""
+    labels: Optional[str or list] = None
+    """A list of labels or sinle label to generate with each render. Must be one of ["YOLO", "COCO", "PASCAL", "DEPTH"] or None"""
+    resolution_x: int = 1024
+    """The horizontal resolution, in pixels, for the rendered image."""
+    resolution_y: int = 1024
+    """The vertical resolution, in pixels, for the rendered image."""
+    render_engine: str = "BLENDER_EEVEE"
+    """The Blender rendering image used to create renders. Must be one of ["BLENDER_EEVEE", "CYCLES"]"""
+    use_shadow: bool = False
+    """Whether or not to generate a shadown under an object."""
+    autoscale: bool = True
+    """ Whether or not to automatically scale an object."""
 
     def __init__(
         self,
@@ -30,19 +32,8 @@ class LeopardiRenderer:
         resolution_y: int = 1024,
         render_engine: str = "BLENDER_EEVEE",
         use_shadow: bool = False,
-        autoscale: bool = False,
+        autoscale: bool = True,
     ):
-        """
-        The base class for defining rendering specs
-
-        Args:
-            labels: (str | list, ["YOLO", "COCO", "PASCAL", "DEPTH"], None) A list of labels or sinle label to generate with each render.
-            resolution_x: (int, 1024) The horizontal resolution, in pixels, for the rendered image.
-            resolution_y: (int, 1024) The vertical resolution, in pixels, for the rendered image.
-            render_engine: (str ["BLENDER_EEVEE", "CYCLES"], "BLENDER_EEVEE") The Blender rendering image used to create renders.
-            use_shadow: (bool, False) Whether or not to generate a shadown under an object.
-            autoscale: (bool, False) Whether or not to auto scale an object.
-        """
         self._label_modes = ["YOLO", "COCO", "PASCAL", "DEPTH"]
 
         self._render_engines = [

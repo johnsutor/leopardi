@@ -14,29 +14,20 @@ from PIL import Image
 
 
 class BackgroundLoader:
-    """
-    The base background loading class
-
-    Args:
-        background_directory: (str, os.getcwd() + "/backgrounds/") The directory containing all background images to be used in the renderer.
-        background_mode: (str ["RANDOM", "ITERATIVE"], "RANDOM") The method by which to select a background image to be used.
-        sampling_fn: (Optional Callable) A function to be used to sample backgroungs. Should return a single string representing a path to a background image.
-    """
+    """The base background loading class. This class stores the directory where backgrounds are located, and determines where to load them from."""
+    background_directory: str = os.path.join(os.getcwd(), "/backgrounds/")
+    """The directory containing all background images to be used in the renderer."""
+    background_mode: str = "RANDOM"
+    """The method by which to select a background image to be used. Must be one of ["RANDOM", "ITERATIVE"]."""
+    sampling_fn: Optional[Callable[[str], Any]] = None
+    """A function to be used to sample backgroungs. Should return a single string representing a path to a background image."""
 
     def __init__(
         self,
-        background_directory: str = os.getcwd() + "/backgrounds/",
+        background_directory: str = os.path.join(os.getcwd(), "/backgrounds/"),
         background_mode: str = "RANDOM",
         sampling_fn: Optional[Callable[[str], Any]] = None,
     ):
-        """
-        The base background loading class
-
-        Args:
-            background_directory: (str, os.getcwd() + "/backgrounds/") The directory containing all background images to be used in the renderer.
-            background_mode: (str ["RANDOM", "ITERATIVE"], "RANDOM") The method by which to select a background image to be used.
-            sampling_fn: (Optional Callable) A function to be used to sample backgroungs. Should return a single string representing a path to a background image.
-        """
         self._background_modes = ["RANDOM", "ITERATIVE"]
         self._image_formats = tuple(Image.registered_extensions().keys())
 

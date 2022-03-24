@@ -13,14 +13,13 @@ from typing import Callable, Optional, Any
 
 
 class ModelLoader:
-    """
-    The base model loading class
-
-    Args:
-        model_directory: (str, "./models/") The directory containing either .fbx or .obj models to be rendered.
-        model_mode: (str ["RANDOM", "ITERATIVE"], "RANDOM") The method for choosing a model to be rendered.
-        sampling_fn: (Optional Callable) A function to be used to sample models. Should return a single string representing a path to a model.
-    """
+    """The base model loading class"""
+    model_directory: str = "./models/"
+    """The directory containing either .fbx or .obj models to be rendered."""
+    model_mode: str = "RANDOM"
+    """ The method for choosing a model to be rendered. Must be one of ["RANDOM", "ITERATIVE"]"""
+    sampling_fn: Optional[Callable]
+    """A function to be used to sample models. Should return a single string representing a path to a model."""
 
     def __init__(
         self,
@@ -28,14 +27,6 @@ class ModelLoader:
         model_mode: str = "RANDOM",
         sampling_fn: Optional[Callable[[str], Any]] = None,
     ):
-        """
-        The base model loading class
-
-        Args:
-            model_directory: (str, "./models/") The directory containing either .fbx or .obj models to be rendered.
-            model_mode: (str ["RANDOM", "ITERATIVE"], "RANDOM") The method for choosing a model to be rendered.
-            sampling_fn: (Optional Callable) A function to be used to sample models. Should return a single string representing a path to a model.
-        """
         self._model_modes = ["RANDOM", "ITERATIVE"]
         self._model_formats = (".fbx", ".obj")
 

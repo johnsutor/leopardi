@@ -21,20 +21,25 @@ from PIL import Image
 
 
 class Leopardi:
-    """
-    The base class for the Leopardi library
+    """The base class for the Leopardi library. This class is composed of all of the other base classes."""
 
-    Args:
-        camera: (leopardi.LeopardiCamera) A LeopardiCamera class, either with the default arguments or additional arguments.
-        lighting: (leopardi.LeopardiLighting) A LeopardiLighting class, either with the default arguments or additional arguments.
-        renderer: (leopardi.LeopardiRenderer) A LeopardiRenderer class, either with the default arguments or additional arguments.
-        background_loader: (leopardi.BackgroundLoader) A BackgroundLoader class, either with the default arguments or additional arguments.
-        model_loader: (leopardi.ModelLoader) A ModelLoader class, either with the default arguments or additional arguments.
-        blender_directory (str, None) The path to the directory containing the blender.exe file. If no path is provided, Leopardi will attempt to search for this file based on the operating system.
-        render_directory (str, "./renders") The path to the directory to hold all renders.
-        num_jobs (int, 1) The number of jobs to dispatch when rendering and applying backgrounds, according to the JobLib package. To use all available cores on the CPU, use -1.
-    """
-
+    camera: LeopardiCamera
+    """A LeopardiCamera class, either with the default arguments or additional arguments."""
+    lighting: LeopardiLighting
+    """A LeopardiLighting class, either with the default arguments or additional arguments."""
+    renderer: LeopardiRenderer
+    """A LeopardiRenderer class, either with the default arguments or additional arguments."""
+    background_loader: BackgroundLoader
+    """A BackgroundLoader class, either with the default arguments or additional arguments."""
+    model_loader: ModelLoader
+    """A ModelLoader class, either with the default arguments or additional arguments."""
+    blender_directory: str = None
+    """The path to the directory containing the blender.exe file. If no path is provided, Leopardi will attempt to search for this file based on the operating system."""
+    render_directory: str = "./renders"
+    """The path to the directory to hold all renders."""
+    num_jobs: int = 1
+    """The number of jobs to dispatch when rendering and applying backgrounds, according to the JobLib package. To use all available cores on the CPU, use -1."""
+    
     def __init__(
         self,
         camera: LeopardiCamera,
@@ -46,20 +51,6 @@ class Leopardi:
         render_directory: str = "./renders",
         num_jobs: int = 1,
     ):
-        """
-        The base class for the Leopardi library
-
-        Args:
-            camera: (leopardi.LeopardiCamera) A LeopardiCamera class, either with the default arguments or additional arguments.
-            lighting: (leopardi.LeopardiLighting) A LeopardiLighting class, either with the default arguments or additional arguments.
-            renderer: (leopardi.LeopardiRenderer) A LeopardiRenderer class, either with the default arguments or additional arguments.
-            background_loader: (leopardi.BackgroundLoader) A BackgroundLoader class, either with the default arguments or additional arguments.
-            model_loader: (leopardi.ModelLoader) A ModelLoader class, either with the default arguments or additional arguments.
-            blender_directory (str, None) The path to the directory containing the blender.exe file. If no path is provided, Leopardi will attempt to search for this file based on the operating system.
-            render_directory (str, "./renders") The path to the directory to hold all renders.
-            num_jobs (int, 1) The number of jobs to dispatch when rendering and applying backgrounds, according to the JobLib package. To use all available cores on the CPU, use -1.
-        """
-
         SYSTEM = platform.system()
         self._blender_command = "blender"
         if not blender_directory:

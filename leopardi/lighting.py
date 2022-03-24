@@ -6,39 +6,16 @@ This file contains utilities and classes for controlling different aspects of le
 
 """
 
-from typing import Union
+from typing import Optional, Union
 import random
 
 
 class LeopardiLighting:
-    """
-    The base lighting class for rendering within Blender
-
-    Args:
-        types: (Union[str, list], "SUN") the type or types to generate the lighting for the scene
-    Kwargs:
-        spot_mode: (str)
-        sun_mode: (str)
-        point_mode: (str)
-        area_mode: (str)
-        flaslight_mode: (str)
-
-    """
+    """The base lighting class for rendering within Blender"""
+    types: Union[str, list] = "SUN"
+    """The type or types to generate the lighting for the scene. Must be one of or multiple of ["SPOT", "SUN", "POINT", "AREA", "FLASHLIGHT"]"""
 
     def __init__(self, types: Union[str, list] = "SUN", **kwargs):
-        """
-        The base lighting class for rendering within Blender
-
-        Args:
-            types: (Union[str, list], "SUN") the type or types to generate the lighting for the scene
-        Kwargs:
-            spot_mode: (str)
-            sun_mode: (str)
-            point_mode: (str)
-            area_mode: (str)
-            flaslight_mode: (str)
-
-        """
         self._lighting_types = ["SPOT", "SUN", "POINT", "AREA", "FLASHLIGHT"]
         self._lighting_modes = ["FIXED", "NORMAL", "UNIFORM"]
 
