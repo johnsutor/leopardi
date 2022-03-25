@@ -153,6 +153,9 @@ class Leopardi:
                         f.write(str(m[:-4]) + "\n")
 
     def render(self, n: int = 0):
+        """Renders a single image."""
+        n: int = 0
+        """The number of images to render. The renders will be stored in the specified render directory for the class."""
         try:
             os.chdir(self._blender_directory)
             Parallel(n_jobs=self._num_jobs, temp_folder="/tmp")(

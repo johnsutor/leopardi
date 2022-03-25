@@ -5,7 +5,6 @@ from .renderer import LeopardiRenderer
 from .lighting import LeopardiLighting
 from .leopardi import Leopardi
 
-
 __title__ = "Leopardi"
 __package_name__ = "leopardi"
 __version__ = "0.2.23"
