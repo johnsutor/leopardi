@@ -2,6 +2,8 @@
 *An extensible library for generating 3D synthetic data with Blender that just works.*
 Requires Python >= 3.0, Blender >= 2.80
 
+**NEW** Check out our new documentation website [here](https://johnsutor.github.io/leopardi/)
+
 Leopardi aims to make it easy to create robust synthetic images by importing scenes into Blender. It takes care of the boring, strenuous, and difficult stuff so that you can devote your time to training and evaluating your machine learning models.
 
 **NOTE: Leopardi is currently in a pre-alpha change. Breaking changes (though unlikely) may occur.**
