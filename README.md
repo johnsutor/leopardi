@@ -8,6 +8,11 @@ Leopardi aims to make it easy to create robust synthetic images by importing sce
 
 **NOTE: Leopardi is currently in a pre-alpha change. Breaking changes (though unlikely) may occur.**
 
+## Installation 
+
+```python
+pip install leopardi 
+```
 ## Backgrounds 
 Backgrounds are imported from a specified directory (which defaults to ./backgrounds/) and merges them with the rendered image.
 
